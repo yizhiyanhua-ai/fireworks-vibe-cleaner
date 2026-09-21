@@ -6,103 +6,62 @@
 
 [![CI](https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner/actions/workflows/ci.yml/badge.svg)](https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner/actions/workflows/ci.yml) [![MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Understand disk growth from Codex and Claude Code, review a bounded cleanup plan, and verify what actually changed. An Agent Skill and a standalone Python CLI, offline by default, with optional Jev advice.
+Use plain language in Codex or Claude Code to find out how much space your coding logs, conversations and caches take up, then decide what to do with them. Checks run locally by default; no additional model API setup is needed.
 
-**v0.1 is deliberately narrow:** cleanup covers old, recognized harness logs and Git-ignored Python bytecode with tracked source. Sessions can be copied and checked, but their originals are retained. Quarantine on the same volume releases **zero bytes**; permanent deletion is a separate approved action.
+**You must approve the specific file list before cleanup. Moving files into quarantine also needs your approval; permanently deleting them needs a separate confirmation.**
 
-## What it handles
+## Use it from Codex or Claude Code
 
-| Data | v0.1 behavior |
+### 1. Ask your AI to install it
+
+Paste this into the Codex or Claude Code session you use:
+
+> Install fireworks-vibe-cleaner from https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner using the published v0.1.1 release. Put it in this tool's personal Skill directory, and don't overwrite an existing installation. Check the requirements and tell me whether it is ready to use. Don't clean up any files yet.
+
+You need macOS or Linux and Python 3.11 or later. Your AI can check what is missing; if it cannot run the installation, follow the [manual installation guide](docs/cli.md#install). Once installed, ask your AI to use `fireworks-vibe-cleaner` by name.
+
+### 2. Find out where the space is going
+
+> Use fireworks-vibe-cleaner to check how much space Codex and Claude Code are using. Show me the main sources of disk usage, old logs or caches worth reviewing, and anything that must be kept. Show me the findings first; don't move or delete files.
+
+It checks the two tools' data directories and lists their usage and cleanup candidates. To include a project, give it that project's path. It does not scan your whole disk by default, and it should tell you about directories it skipped or files it could not read.
+
+### 3. Review the plan before approving cleanup
+
+> Based on that scan, show me a specific cleanup plan: which files, how much space they take up, why they can be handled, what you will do with them, and whether I can undo it. Wait for me to approve this plan before acting.
+
+Your AI must explain the scope and method first. A general request to “clean things up” does not approve deleting an unseen set of files. Your confirmation applies to that specific plan; changed files or scope require a new confirmation.
+
+The supported cleanup flow first moves approved old logs or caches into a quarantine folder on the same disk. After checking the result, you can restore them or separately approve permanent deletion. **Moving files into quarantine does not free disk space.** Before cleanup, the relevant tools or project processes must stop writing to those files; your AI should explain what you need to do.
+
+## Other things you can ask
+
+| What you want | What to tell your AI |
 | --- | --- |
-| Codex `log/codex-tui.log`, `logs/codex-tui.log` and Claude `debug/` logs | Retention check → reviewed plan → quarantine → restore or separately approved purge |
-| Project `__pycache__/*.pyc` | Requires existing tracked source and an ignored, untracked cache file; checked again before execution |
-| Session transcripts, Claude tool results and checkpoints, generated assets | Inventory and selected byte-verified backup; source retained; harness resume unverified |
-| Codex worktrees | Read-only classification; no automatic removal or Git lifecycle management |
-| Source, memories, credentials, databases, unknown objects | Protected from cleanup |
+| Check a project | “Use fireworks-vibe-cleaner to inspect this project: `<absolute project path>`. Just report disk usage for now; don't change files.” |
+| Keep important files | “Keep logs from the last 30 days, and leave `<path to keep>` alone. Show me the remaining candidates first.” |
+| Back up old conversations | “Find large older conversations and list what you would back up, including the extra space needed. Verify the backup contents and keep the originals.” |
+| Undo a quarantine operation | “Restore the files from the quarantine operation I just approved. If a file already exists at its original path, don't overwrite it; tell me first.” |
 
-Default retention is 30 days. Scan eligibility is preliminary, not permission to delete. Traversal does not follow child symlinks or cross volumes; dependencies and Git internals are pruned and disclosed as incomplete coverage. This is not a whole-disk usage analyzer.
+Session backups use additional space, and the current version does not delete original conversations. Matching backup contents also does not prove that you can continue the conversation in Codex or Claude Code.
 
-## Install
+For optional advice from Jev on uncertain candidates, you can say:
 
-Requires Python 3.11+, macOS or Linux. Mutation of source/quarantine files additionally requires `lsof`; project-bytecode validation requires Git. No runtime Python dependencies, daemon, or default network requests.
+> Ask Jev for a second opinion on these candidates. First explain what information would be sent and whether there is a charge, then wait for my approval to make the network call. Show me the advice; don't use it to clean up files automatically.
 
-Install the tagged source:
+Jev is optional, requires a TypeSafe API key and may incur charges. It receives metadata such as file category, size and age bands, without paths, filenames, conversation text or code. Its advice never replaces your cleanup approval. You can inspect and clean supported files without Jev.
 
-```sh
-git clone --branch v0.1.1 --depth 1 https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner.git
-cd fireworks-vibe-cleaner
-python3 scripts/fireworks-vibe-cleaner.py doctor
-```
+## What it can handle today
 
-Direct script execution needs no package installation. For the shorter `fireworks-vibe-cleaner` command used below, optionally create a virtual environment and run `python -m pip install .`; alternatively replace that command with `python3 scripts/fireworks-vibe-cleaner.py`. During development, use a local checkout and omit the tag clone. Publication and live validation status are recorded in [release notes](docs/releases/v0.1.1.md).
+| Content | Current behavior |
+| --- | --- |
+| The tools' own older logs | Recognizes Codex `log/codex-tui.log`, `logs/codex-tui.log` and Claude `debug/` logs; keeps the last 30 days by default and lists older files as candidates |
+| Python project caches | Only `__pycache__/*.pyc` with existing Git-tracked source; the cache itself must be ignored and untracked by Git |
+| Conversations, tool results, checkpoints and generated files | Reports usage and can back up selected files; keeps the originals |
+| Codex worktrees | Inspects and classifies them; does not automatically remove them |
+| Source code, memories, credentials, databases and unrecognized content | Excluded from cleanup |
 
-To install the Skill, generate the bundle and copy it to the harness you use. These commands intentionally refuse to overwrite an existing installation:
-
-```sh
-python3 tools/build_skill.py
-mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
-test ! -e "${CODEX_HOME:-$HOME/.codex}/skills/fireworks-vibe-cleaner" && cp -R skills/fireworks-vibe-cleaner "${CODEX_HOME:-$HOME/.codex}/skills/"
-# Alternatively, for Claude Code:
-mkdir -p "$HOME/.claude/skills"
-test ! -e "$HOME/.claude/skills/fireworks-vibe-cleaner" && cp -R skills/fireworks-vibe-cleaner "$HOME/.claude/skills/"
-```
-
-The copied Skill includes its Python launcher. Ask your harness to use `fireworks-vibe-cleaner` to inspect space and propose a cleanup scope. It must obtain approval for the exact plan before modifying source files.
-
-## Inspect, review, then act
-
-```sh
-fireworks-vibe-cleaner scan --output scan.json
-fireworks-vibe-cleaner report --scan scan.json
-# Explicit project roots are opt-in; repeat --root to select multiple roots.
-fireworks-vibe-cleaner scan --root project=/absolute/path/to/project --output project-scan.json
-```
-
-Default roots respect `CODEX_HOME` and `CLAUDE_CONFIG_DIR`. `--keep '*/important.log'` protects matching files. Reports contain local paths: keep them private. Growth comparison requires two complete scans of identical roots: `report --scan later.json --previous earlier.json`.
-
-The commands below are templates: replace `CANDIDATE_ID`, `REVIEWED_PLAN_HASH`, `RUN_ID` and paths with values you have inspected. Keep the state directory on the same volume as the selected files, outside their source directories, and private (mode `0700`). The CLI creates a new state directory with that mode. A plan expires after one hour.
-
-```sh
-fireworks-vibe-cleaner plan --scan scan.json --id CANDIDATE_ID   --state-dir /absolute/path/to/private-state --max-bytes 104857600 --output plan.json
-# Read all of plan.json; explicitly approve that scope and hash.
-# Stop the relevant harness/project writers before acknowledging this flag.
-fireworks-vibe-cleaner apply --plan plan.json --approve REVIEWED_PLAN_HASH --writers-stopped
-fireworks-vibe-cleaner verify --state-dir /absolute/path/to/private-state --run RUN_ID
-```
-
-`apply` checks the approval hash, expiry, byte cap, file identity, content hash, local policy and open handles. It records a journal and moves approved files into same-volume quarantine. `--writers-stopped` is your acknowledgement, not a command that stops processes. `lsof` failures or inconclusive results refuse the operation. Concurrent writers remain a risk; do not clean a running harness.
-
-Choose recovery **or** permanent deletion after verification:
-
-```sh
-fireworks-vibe-cleaner restore --state-dir /absolute/path/to/private-state --run RUN_ID --writers-stopped
-# Separate explicit approval is required; this cannot be undone by the cleaner.
-fireworks-vibe-cleaner purge --state-dir /absolute/path/to/private-state --run RUN_ID   --approve purge:RUN_ID --writers-stopped
-```
-
-Restore refuses to overwrite an occupied source path. After an interruption, run `verify`, preserve the journal and recovery files, and resolve the reported state; do not replay `apply`. A restored run cannot be purged. Quarantine defaults to a 1 GiB logical capacity limit (`apply --state-cap-bytes`). Purge reports deleted logical bytes and observed volume free-space change separately; snapshots, shared blocks and unrelated writes affect the latter.
-
-## Session copies
-
-```sh
-mkdir -m 700 /absolute/path/to/new-private-backups
-fireworks-vibe-cleaner backup --scan scan.json --id SESSION_CANDIDATE_ID   --output /absolute/path/to/new-private-backups/session.zip --max-bytes 104857600
-fireworks-vibe-cleaner extract --archive /absolute/path/to/new-private-backups/session.zip   --destination /absolute/path/to/new-extraction-directory
-```
-
-Backup checks archived bytes against hashes. Keep the ZIP and its `.manifest.json` together. Extraction defaults to a 1 GiB byte cap (`extract --max-bytes`). It writes numbered copies into a new directory and checks hashes; it does not rebuild live harness state. **A valid backup is not evidence that a session can resume.** Sources remain untouched, so this increases storage use. Backups are unencrypted and restricted to the source volume; cross-volume moves, encryption and session deletion are not implemented.
-
-## Optional Jev advice
-
-Supply `TYPESAFE_API_KEY` through your secret manager or process environment, never in command history or a report. Explicitly opt in:
-
-```sh
-fireworks-vibe-cleaner advise --scan scan.json --id CANDIDATE_ID --enable-network --output advice.json
-```
-
-One invocation makes at most one TypeSafe API call for 1–20 selected candidates. It sends temporary candidate labels, category, size/age bands, rule eligibility and unknown activity status. It does **not** send paths, filenames, original candidate IDs, session text, source code or free-text reasons. The payload cap is 16 KiB, response cap 64 KiB, network timeout 8 seconds; redirects and automatic retries are disabled.
-
-Jev may suggest `keep`, `review` or `backup`. It cannot authorize deletion, change a plan or override a protection rule. Its confidence is not a probability of safe deletion. Missing credentials, HTTP errors or invalid responses fall back to rules-only mode. Calls may incur provider charges; a one-call cap is not a monetary budget guarantee. Live metadata-only calls succeeded on 2026-09-21 (Jev 1.13.0); measured results are below. Accuracy and superiority over rules remain unverified. Core cleanup does not depend on Jev availability.
+For full commands, requirements and recovery steps, see the [manual installation and CLI guide](docs/cli.md). See [compatibility](docs/compatibility.md) for supported scope. Local scan reports may contain private paths; keep them on your machine.
 
 ## Real 10 GiB validation and live Jev comparison
 

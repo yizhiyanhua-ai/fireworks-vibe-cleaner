@@ -6,103 +6,62 @@
 
 [![CI](https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner/actions/workflows/ci.yml/badge.svg)](https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner/actions/workflows/ci.yml) [![MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-查看 Codex、Claude Code 产生的磁盘占用，审阅有明确范围的清理计划，再验证实际变化。同时提供 Agent Skill 和独立 Python CLI，默认离线，可选 Jev 辅助建议。
+让你在 Codex 或 Claude Code 里，用自然语言检查 AI 编程留下的日志、会话记录和缓存占了多少空间，再决定怎么处理。默认在本地检查，不需要额外配置模型 API。
 
-**v0.1 的清理范围有限：**仅处理超过保留期的已知 harness 日志，以及有 Git 跟踪源文件、被 Git 忽略且自身未跟踪的 Python 字节码。会话支持复制与字节校验，保留源文件。同盘隔离释放 **0 字节**；永久删除需要单独批准。
+**清理前一定要由你确认具体清单。移动到隔离区也要先确认；永久删除还需要再确认一次。**
 
-## 支持范围
+## 在 Codex / Claude Code 里怎么用
 
-| 对象 | v0.1 行为 |
+### 1. 第一次用，先让 AI 帮你安装
+
+把这段话发给你正在使用的 Codex 或 Claude Code：
+
+> 帮我安装 fireworks-vibe-cleaner，仓库是 https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner ，使用已发布的 v0.1.1 版本。装到当前工具的个人 Skill 目录，已有安装不要直接覆盖。检查运行环境，完成后告诉我是否可用，先不要清理任何文件。
+
+需要 macOS 或 Linux，以及 Python 3.11 以上版本。AI 可以先检查缺什么；如果当前工具无法执行安装，按[手动安装指南](docs/cli.zh.md#安装)操作即可。安装完成后，让 AI 明确使用 `fireworks-vibe-cleaner`。
+
+### 2. 先看看空间用在哪里
+
+> 用 fireworks-vibe-cleaner 帮我检查 Codex 和 Claude Code 占用了多少空间。列出主要占用、可以考虑处理的旧日志或缓存，以及必须保留的内容。先给我看结果，不要移动或删除文件。
+
+它会检查这两个工具的数据目录，整理占用和候选清单。如果你还想检查某个项目，把项目路径告诉它。它不会默认扫描整块硬盘；遇到跳过的目录或读不到的文件，应在结果里说明。
+
+### 3. 看完建议，再决定要不要清理
+
+> 针对刚才的检查结果，给我一份具体清理方案：列出文件、占用大小、为什么可以处理、准备怎么处理，以及能不能恢复。等我确认这份方案后再执行。
+
+AI 必须先把范围和处理方式讲清楚，不能把“帮我清理一下”当成对未知文件的删除授权。你确认的是这一份具体方案；文件或范围变了，就要重新确认。
+
+目前支持的清理流程是：先把获准处理的旧日志或缓存移到同一磁盘的隔离区，检查结果后，你可以选择还原，也可以另行确认永久删除。**移入隔离区不会腾出磁盘空间。** 清理前还需要停止相关工具或项目对这些文件的写入，AI 应先说明需要你配合的步骤。
+
+## 还可以这样说
+
+| 想做什么 | 发给 AI 的话 |
 | --- | --- |
-| Codex `log/codex-tui.log`、`logs/codex-tui.log` 与 Claude `debug/` 日志 | 保留期检查 → 审阅计划 → 隔离 → 恢复或单独批准永久清理 |
-| 项目 `__pycache__/*.pyc` | 要求源文件存在且被 Git 跟踪、缓存被忽略且未跟踪；执行前再次检查 |
-| 会话记录、Claude 工具结果与恢复快照、生成资产 | 清点及按选定文件备份；校验字节、保留源文件；尚未验证 harness 会话恢复 |
-| Codex worktree | 只读分类；不自动删除，不代管 Git 生命周期 |
-| 源码、记忆、凭据、数据库、未知对象 | 禁止进入清理执行器 |
+| 检查一个项目 | “用 fireworks-vibe-cleaner 检查这个项目：`<项目绝对路径>`。先只看占用，不要改文件。” |
+| 保留重要文件 | “最近 30 天的日志都保留，`<需要保留的文件路径>` 也不要动。先把剩余候选列给我看。” |
+| 备份旧会话 | “帮我挑出占用较大的旧会话，列出备份清单和需要的额外空间。备份后校验文件内容，原件保留。” |
+| 撤销一次隔离 | “把刚才那次已确认的隔离操作还原。如果原路径已经有文件，不要覆盖，先告诉我。” |
 
-默认保留期为 30 天。扫描中的 eligible 只是初步候选，不代表删除授权。遍历不跟随子目录符号链接、不跨卷；依赖目录与 Git 内部目录会跳过并标明扫描不完整。本工具不提供整盘完整占用统计。
+会话备份会增加占用，当前版本不会删除会话原件。备份内容校验一致，也不代表能在 Codex 或 Claude Code 里继续那段对话。
 
-## 安装
+如果想让 Jev 帮忙判断拿不准的候选，可以说：
 
-需要 Python 3.11+，支持 macOS、Linux。修改源文件或隔离文件还需要 `lsof`；项目字节码检查需要 Git。无 Python 运行时第三方依赖，不启动常驻服务，默认不联网。
+> 这批候选请用 Jev 给辅助建议。先告诉我要发送哪些信息、是否收费，等我同意联网调用后再使用。建议先给我看，不要据此自动清理。
 
-从固定标签安装：
+Jev 是可选功能，需要配置 TypeSafe API Key，可能产生费用。它只接收文件类别、大小和时间区间等信息，不发送路径、文件名、对话正文或代码。它的建议不能代替你的清理确认；不启用 Jev 也能检查和清理支持的文件。
 
-```sh
-git clone --branch v0.1.1 --depth 1 https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner.git
-cd fireworks-vibe-cleaner
-python3 scripts/fireworks-vibe-cleaner.py doctor
-```
+## 目前能处理哪些内容
 
-直接运行脚本无需安装 Python 包。下文使用简短的 `fireworks-vibe-cleaner` 命令，可选择创建虚拟环境并执行 `python -m pip install .`；也可将该命令替换为 `python3 scripts/fireworks-vibe-cleaner.py`。开发期间使用本地 checkout，跳过标签克隆步骤。实际发布与实测状态见[版本说明](docs/releases/v0.1.1.md)。
+| 内容 | 当前版本能做什么 |
+| --- | --- |
+| 工具自身的旧日志 | 识别 Codex 的 `log/codex-tui.log`、`logs/codex-tui.log` 和 Claude 的 `debug/` 日志；默认保留最近 30 天的日志，其余先列入候选 |
+| 项目的 Python 缓存 | 仅处理 `__pycache__/*.pyc`，且必须有被 Git 跟踪的源文件；缓存本身要被 Git 忽略、未被跟踪 |
+| 会话记录、工具结果、恢复快照、生成文件 | 检查占用，并可按所选文件备份；保留原件 |
+| Codex worktree | 只查看和分类，不自动删除 |
+| 源码、记忆、密钥、数据库和无法识别的内容 | 不进入清理流程 |
 
-安装 Skill 时先生成目录，再复制到使用的 harness。以下命令拒绝覆盖已有安装：
-
-```sh
-python3 tools/build_skill.py
-mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
-test ! -e "${CODEX_HOME:-$HOME/.codex}/skills/fireworks-vibe-cleaner" && cp -R skills/fireworks-vibe-cleaner "${CODEX_HOME:-$HOME/.codex}/skills/"
-# 或安装到 Claude Code：
-mkdir -p "$HOME/.claude/skills"
-test ! -e "$HOME/.claude/skills/fireworks-vibe-cleaner" && cp -R skills/fireworks-vibe-cleaner "$HOME/.claude/skills/"
-```
-
-Skill 自带 Python 启动脚本。让 harness 使用 `fireworks-vibe-cleaner` 查看空间、提出清理范围；修改源文件前必须取得具体计划的批准。
-
-## 先检查，再审阅与执行
-
-```sh
-fireworks-vibe-cleaner scan --output scan.json
-fireworks-vibe-cleaner report --scan scan.json
-# 项目根需要显式指定；可重复 --root。
-fireworks-vibe-cleaner scan --root project=/absolute/path/to/project --output project-scan.json
-```
-
-默认根遵循 `CODEX_HOME` 和 `CLAUDE_CONFIG_DIR`。使用 `--keep '*/important.log'` 保留匹配文件。扫描报告含本地路径，请私下保存。增长比较需要相同根下两次完整扫描：`report --scan later.json --previous earlier.json`。
-
-以下为命令模板：将 `CANDIDATE_ID`、`REVIEWED_PLAN_HASH`、`RUN_ID` 和路径替换为审阅后的实际值。状态目录必须与待处理文件同卷、位于其来源目录之外，权限为 `0700`；CLI 新建状态目录时使用该权限。计划有效期为一小时。
-
-```sh
-fireworks-vibe-cleaner plan --scan scan.json --id CANDIDATE_ID   --state-dir /absolute/path/to/private-state --max-bytes 104857600 --output plan.json
-# 阅读完整 plan.json，明确批准范围与哈希。
-# 停止相关 harness / 项目写入进程后，才可使用此确认参数。
-fireworks-vibe-cleaner apply --plan plan.json --approve REVIEWED_PLAN_HASH --writers-stopped
-fireworks-vibe-cleaner verify --state-dir /absolute/path/to/private-state --run RUN_ID
-```
-
-`apply` 检查批准哈希、有效期、字节上限、文件身份、内容哈希、本地策略和打开句柄，记录事务日志并把文件移入同盘隔离区。`--writers-stopped` 表示操作者确认停止写入，工具不会替你关闭进程。`lsof` 报错或结果不确定时拒绝操作。仍需防范并发写入，请勿清理正在运行的 harness。
-
-验证后选择恢复，或单独批准永久删除：
-
-```sh
-fireworks-vibe-cleaner restore --state-dir /absolute/path/to/private-state --run RUN_ID --writers-stopped
-# 永久删除需要独立授权，工具无法撤销。
-fireworks-vibe-cleaner purge --state-dir /absolute/path/to/private-state --run RUN_ID   --approve purge:RUN_ID --writers-stopped
-```
-
-恢复时原路径被占用会拒绝覆盖。操作中断后先运行 `verify`，保留日志与恢复文件，按报告处理；不要重放 `apply`。已恢复的 run 无法再 purge。隔离区默认逻辑容量上限为 1 GiB，可用 `apply --state-cap-bytes` 设置。永久清理分别报告删除的逻辑字节与卷空闲空间实际差值；快照、共享块和其他进程写入都会影响差值。
-
-## 会话备份
-
-```sh
-mkdir -m 700 /absolute/path/to/new-private-backups
-fireworks-vibe-cleaner backup --scan scan.json --id SESSION_CANDIDATE_ID   --output /absolute/path/to/new-private-backups/session.zip --max-bytes 104857600
-fireworks-vibe-cleaner extract --archive /absolute/path/to/new-private-backups/session.zip   --destination /absolute/path/to/new-extraction-directory
-```
-
-备份会读回压缩包并核验哈希。ZIP 与旁边的 `.manifest.json` 必须一起保留。解包默认容量上限为 1 GiB（`extract --max-bytes`），只在新目录写入编号副本并校验哈希，不重建 harness 状态。**备份字节正确不代表会话可以恢复使用。**源文件不移除，因此备份会增加占用。备份未加密且限制在源文件所在卷；跨卷迁移、加密、会话删除均未实现。
-
-## 可选 Jev 建议
-
-通过密钥管理器或进程环境提供 `TYPESAFE_API_KEY`，不要写入命令历史或报告。使用以下参数显式启用联网：
-
-```sh
-fireworks-vibe-cleaner advise --scan scan.json --id CANDIDATE_ID --enable-network --output advice.json
-```
-
-每次执行最多调用一次 TypeSafe API，处理 1–20 个候选。仅发送临时候选编号、类别、大小/年龄区间、规则资格以及“活跃状态未知”；不发送路径、文件名、原始候选 ID、会话正文、源码或自由文本原因。请求上限 16 KiB、响应上限 64 KiB、网络超时 8 秒；禁止重定向，不自动重试。
-
-Jev 仅可建议 `keep`、`review`、`backup`，无法批准删除、修改计划或绕过保护规则。置信度不代表安全删除概率。缺少 Key、HTTP 错误或非法响应均退回纯规则模式。调用可能产生服务商费用；一次调用上限不等于金额预算保证。2026-09-21 的真实元数据调用已成功（Jev 1.13.0），结果见下表；准确率及相对规则的收益仍未验证。核心清理不依赖 Jev 可用性。
+完整命令、环境要求和故障恢复步骤见[手动安装与命令行指南](docs/cli.zh.md)，支持范围见[兼容性说明](docs/compatibility.md)。本地扫描报告可能含私人路径，请留在本机。
 
 ## 真实 10 GiB 验证与 Jev 线上对比
 
