@@ -53,6 +53,20 @@ for path in (ROOT / "docs/experiments").glob("*.json"):
         for run in report["runs"]:
             assert run["status"] == "ok"
             assert all(a["choice"] in {"keep", "review", "backup"} for a in run["answers"].values())
+    elif report["data"] == "real-session-preflight":
+        assert report["source_mutations_authorized"] is False
+        assert report["source_mutations_executed"] is False
+        assert report["real_source_files_deleted"] == report["verified_reclaimed_bytes"] == 0
+        assert report["phase"] == "read-only-preflight-complete-awaiting-exact-cleanup-approval"
+        preflight = report["preflight"]
+        assert preflight["real_original_files"] > 0 and preflight["source_logical_bytes"] > 0
+        assert preflight["unique_archives"] > 0 and preflight["retained_archive_bytes"] > 0
+        assert preflight["full_source_hashes_match"]
+        assert preflight["full_archives_and_selected_members_verified"]
+        assert preflight["open_handle_checks_passed"]
+        assert len(report["actual_cli_refusal_checks"]) == 3
+        assert all(row["exit_code"] == 2 and not row["run_created"]
+                   for row in report["actual_cli_refusal_checks"])
     elif report["data"] == "real-native-history":
         # A failed native recovery check is a finding, never rewritten as success.
         assert report["continuation_verified"] is False

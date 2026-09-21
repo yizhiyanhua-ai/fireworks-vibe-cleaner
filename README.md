@@ -64,19 +64,27 @@ A broad cleanup request does not approve unseen files. Stop relevant writers bef
 
 See the [CLI guide](docs/cli.md), [compatibility](docs/compatibility.md) and [v0.2.0 evidence record](docs/releases/v0.2.0.md). Keep local reports and recovery data private.
 
-The following measurements predate v0.2.0 archive removal and its expanded Jev choices. They do not validate these new capabilities.
-
 ## v0.2.0 workflow validation
+
+On 2026-09-21, the published v0.2.0 was checked against existing local files with real Jev calls. No synthetic files or artificial file aging were used for this run.
 
 | Check | Result |
 | --- | --- |
 | Archived removal, original-path restore, approval refusals, interrupted/read-only recovery | 63 local tests passed using isolated test data |
-| Live Jev with the expanded action contract | 1 call, 20 real candidates, all `review`; 4,936 input tokens, 2,620 ms |
-| New real-source cleanup | Awaiting approval of the exact file list; not executed. Test-fixture deletion is not real-user space recovery. |
+| Fresh real inventory | 49,810 files; 231 skipped boundaries. The scan is incomplete and is not whole-disk accounting. |
+| Existing sources and archives reverified | 189 transcripts, 6,282,966,045 bytes (5.851 GiB); 9 existing archives, 4.188 GiB. Full source SHA-256, full archive SHA-256 and decompressed selected-member bytes all matched. |
+| Refusal checks using a real plan | Wrong plan hash, missing stopped-writer attestation and missing history-risk acknowledgement all refused execution; no deletion transaction was created. |
+| Fresh live Jev calls | 20 existing files: 7 transcripts, 3 logs, 3 Python caches, 3 protected files, 2 checkpoints and 2 assets. Two calls, 40 decisions, all `review`. |
+| Jev latency and usage | 1,761 / 1,821 ms; 9,374 input tokens. Estimated US$0.000393708 at the [official rate](https://docs.typesafe.ai/models); billed cost was not verified. |
+| New real-source cleanup | Awaiting exact human approval; not executed, with 0 bytes of verified reclaim. The hash checks above were read-only. |
 
-[Sanitized live Jev record](docs/experiments/real-jev-v02.json). No accuracy or advantage over rules is established.
+No old log/cache files in this scope met the 30-day retention and local eligibility checks, so **none of the 20 candidates offered `delete`; live delete recommendations were not validated**. Eleven candidates allowed `backup`; the remaining nine allowed only `keep/review`. Jev chose review for all of them. Two matching runs establish observed choice consistency for this sample, with no labeled ground truth or evidence of accuracy gains over rules. Only allowlisted metadata was sent, without paths, filenames, transcripts or code.
+
+[Fresh read-only evidence](docs/experiments/real-session-preflight-v02-2026-09-21.json) · [Fresh sanitized Jev evidence](docs/experiments/real-jev-mixed-v02-2026-09-21.json) · [Earlier single-call check](docs/experiments/real-jev-v02.json). Real-original removal and original-path restoration still require approval of the exact list; file recovery does not establish native conversation continuation.
 
 ## Real 10 GiB validation and live Jev comparison
+
+The following historical backup measurements predate v0.2.0 archive removal and its expanded Jev choices. They do not validate those new capabilities.
 
 **Cleanup of real user data always requires explicit human confirmation of the concrete scope.** This run only read originals, created private archives and verified recovery bytes. No original was quarantined, moved or deleted.
 

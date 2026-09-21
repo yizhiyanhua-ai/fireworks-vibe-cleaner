@@ -1,0 +1,79 @@
+{
+  "schema": 1,
+  "date": "2026-09-21",
+  "version": "0.2.0",
+  "commit": "a456028b56b8896ba80150abf601af13f75d5db4",
+  "data": "real-session-preflight",
+  "source_mutations_authorized": false,
+  "source_mutations_executed": false,
+  "real_source_files_deleted": 0,
+  "verified_reclaimed_bytes": 0,
+  "phase": "read-only-preflight-complete-awaiting-exact-cleanup-approval",
+  "scan": {
+    "scope": [
+      "codex-home",
+      "claude-home",
+      "this-project"
+    ],
+    "files": 49810,
+    "complete": false,
+    "skipped_boundaries": 231,
+    "eligible_log_cache_files": 0
+  },
+  "preflight": {
+    "real_original_files": 189,
+    "source_logical_bytes": 6282966045,
+    "unique_archives": 9,
+    "retained_archive_bytes": 4496924976,
+    "full_source_hashes_match": true,
+    "full_archives_and_selected_members_verified": true,
+    "open_handle_checks_passed": true,
+    "elapsed_seconds": 33.612
+  },
+  "actual_cli_refusal_checks": [
+    {
+      "gate": "wrong_hash",
+      "exit_code": 2,
+      "output": "{\"error\": \"Refused\", \"message\": \"Approval must match the complete reviewed archive removal plan\"}",
+      "run_created": false
+    },
+    {
+      "gate": "no_writer_attestation",
+      "exit_code": 2,
+      "output": "{\"error\": \"Refused\", \"message\": \"Stop writers and explicitly acknowledge the reviewed history/continuation risk\"}",
+      "run_created": false
+    },
+    {
+      "gate": "no_history_acknowledgement",
+      "exit_code": 2,
+      "output": "{\"error\": \"Refused\", \"message\": \"Stop writers and explicitly acknowledge the reviewed history/continuation risk\"}",
+      "run_created": false
+    }
+  ],
+  "jev": {
+    "report": "real-jev-mixed-v02-2026-09-21.json",
+    "files": 20,
+    "calls": 2,
+    "decisions": {
+      "review": 40
+    },
+    "input_tokens": 9374,
+    "elapsed_ms": [
+      1761,
+      1821
+    ],
+    "estimated_input_cost_usd": 0.000393708,
+    "billing_statement_verified": false,
+    "delete_option_candidates": 0
+  },
+  "limitations": [
+    "No synthetic data or artificial file aging was used.",
+    "Real original removal remains unexecuted until exact human approval and stopped-writer attestation.",
+    "Successful file restoration does not establish harness index integrity or native conversation continuation.",
+    "The incomplete scan is not whole-disk accounting.",
+    "No eligible old log/cache candidates were found; live Jev delete recommendations were not tested.",
+    "Jev metadata advice has no labeled ground truth and does not establish accuracy superiority."
+  ],
+  "real_user_data_modified": false,
+  "network_calls": 0
+}

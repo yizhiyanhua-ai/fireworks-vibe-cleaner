@@ -1,0 +1,744 @@
+{
+  "schema": 1,
+  "data": "real-live-jev",
+  "date": "2026-09-21",
+  "commit": "a456028b56b8896ba80150abf601af13f75d5db4",
+  "transport_mocked": false,
+  "source_data_modified": false,
+  "sample_files": 20,
+  "category_counts": {
+    "session": 7,
+    "log": 3,
+    "bytecode": 3,
+    "protected": 3,
+    "checkpoint": 2,
+    "asset": 2
+  },
+  "min_age_days": 30,
+  "request_sha256": "56005230c8858dfc6af7a5b27f71363cf81de8c920034863c8a48b819814d590",
+  "sample_metadata": [
+    {
+      "candidate": "c0",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "old",
+      "rule_eligible": false,
+      "active_state": "no_open_handles",
+      "allowed_actions": [
+        "keep",
+        "review",
+        "backup"
+      ],
+      "retention_met": true,
+      "local_policy_checked": true
+    },
+    {
+      "candidate": "c1",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "old",
+      "rule_eligible": false,
+      "active_state": "no_open_handles",
+      "allowed_actions": [
+        "keep",
+        "review",
+        "backup"
+      ],
+      "retention_met": true,
+      "local_policy_checked": true
+    },
+    {
+      "candidate": "c2",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "old",
+      "rule_eligible": false,
+      "active_state": "no_open_handles",
+      "allowed_actions": [
+        "keep",
+        "review",
+        "backup"
+      ],
+      "retention_met": true,
+      "local_policy_checked": true
+    },
+    {
+      "candidate": "c3",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "old",
+      "rule_eligible": false,
+      "active_state": "no_open_handles",
+      "allowed_actions": [
+        "keep",
+        "review",
+        "backup"
+      ],
+      "retention_met": true,
+      "local_policy_checked": true
+    },
+    {
+      "candidate": "c4",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "old",
+      "rule_eligible": false,
+      "active_state": "no_open_handles",
+      "allowed_actions": [
+        "keep",
+        "review",
+        "backup"
+      ],
+      "retention_met": true,
+      "local_policy_checked": true
+    },
+    {
+      "candidate": "c5",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "old",
+      "rule_eligible": false,
+      "active_state": "no_open_handles",
+      "allowed_actions": [
+        "keep",
+        "review",
+        "backup"
+      ],
+      "retention_met": true,
+      "local_policy_checked": true
+    },
+    {
+      "candidate": "c6",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "old",
+      "rule_eligible": false,
+      "active_state": "no_open_handles",
+      "allowed_actions": [
+        "keep",
+        "review",
+        "backup"
+      ],
+      "retention_met": true,
+      "local_policy_checked": true
+    },
+    {
+      "candidate": "c7",
+      "category": "log",
+      "size_band": "small",
+      "age_band": "recent",
+      "rule_eligible": false,
+      "active_state": "unknown",
+      "allowed_actions": [
+        "keep",
+        "review"
+      ],
+      "retention_met": false,
+      "local_policy_checked": false
+    },
+    {
+      "candidate": "c8",
+      "category": "log",
+      "size_band": "small",
+      "age_band": "recent",
+      "rule_eligible": false,
+      "active_state": "unknown",
+      "allowed_actions": [
+        "keep",
+        "review"
+      ],
+      "retention_met": false,
+      "local_policy_checked": false
+    },
+    {
+      "candidate": "c9",
+      "category": "log",
+      "size_band": "small",
+      "age_band": "recent",
+      "rule_eligible": false,
+      "active_state": "unknown",
+      "allowed_actions": [
+        "keep",
+        "review"
+      ],
+      "retention_met": false,
+      "local_policy_checked": false
+    },
+    {
+      "candidate": "c10",
+      "category": "bytecode",
+      "size_band": "small",
+      "age_band": "recent",
+      "rule_eligible": false,
+      "active_state": "unknown",
+      "allowed_actions": [
+        "keep",
+        "review"
+      ],
+      "retention_met": false,
+      "local_policy_checked": false
+    },
+    {
+      "candidate": "c11",
+      "category": "bytecode",
+      "size_band": "small",
+      "age_band": "recent",
+      "rule_eligible": false,
+      "active_state": "unknown",
+      "allowed_actions": [
+        "keep",
+        "review"
+      ],
+      "retention_met": false,
+      "local_policy_checked": false
+    },
+    {
+      "candidate": "c12",
+      "category": "bytecode",
+      "size_band": "small",
+      "age_band": "recent",
+      "rule_eligible": false,
+      "active_state": "unknown",
+      "allowed_actions": [
+        "keep",
+        "review"
+      ],
+      "retention_met": false,
+      "local_policy_checked": false
+    },
+    {
+      "candidate": "c13",
+      "category": "protected",
+      "size_band": "large",
+      "age_band": "old",
+      "rule_eligible": false,
+      "active_state": "no_open_handles",
+      "allowed_actions": [
+        "keep",
+        "review"
+      ],
+      "retention_met": true,
+      "local_policy_checked": true
+    },
+    {
+      "candidate": "c14",
+      "category": "protected",
+      "size_band": "large",
+      "age_band": "old",
+      "rule_eligible": false,
+      "active_state": "no_open_handles",
+      "allowed_actions": [
+        "keep",
+        "review"
+      ],
+      "retention_met": true,
+      "local_policy_checked": true
+    },
+    {
+      "candidate": "c15",
+      "category": "protected",
+      "size_band": "large",
+      "age_band": "old",
+      "rule_eligible": false,
+      "active_state": "no_open_handles",
+      "allowed_actions": [
+        "keep",
+        "review"
+      ],
+      "retention_met": true,
+      "local_policy_checked": true
+    },
+    {
+      "candidate": "c16",
+      "category": "checkpoint",
+      "size_band": "small",
+      "age_band": "old",
+      "rule_eligible": false,
+      "active_state": "no_open_handles",
+      "allowed_actions": [
+        "keep",
+        "review",
+        "backup"
+      ],
+      "retention_met": true,
+      "local_policy_checked": true
+    },
+    {
+      "candidate": "c17",
+      "category": "checkpoint",
+      "size_band": "small",
+      "age_band": "recent",
+      "rule_eligible": false,
+      "active_state": "no_open_handles",
+      "allowed_actions": [
+        "keep",
+        "review",
+        "backup"
+      ],
+      "retention_met": false,
+      "local_policy_checked": true
+    },
+    {
+      "candidate": "c18",
+      "category": "asset",
+      "size_band": "small",
+      "age_band": "old",
+      "rule_eligible": false,
+      "active_state": "no_open_handles",
+      "allowed_actions": [
+        "keep",
+        "review",
+        "backup"
+      ],
+      "retention_met": true,
+      "local_policy_checked": true
+    },
+    {
+      "candidate": "c19",
+      "category": "asset",
+      "size_band": "small",
+      "age_band": "old",
+      "rule_eligible": false,
+      "active_state": "no_open_handles",
+      "allowed_actions": [
+        "keep",
+        "review",
+        "backup"
+      ],
+      "retention_met": true,
+      "local_policy_checked": true
+    }
+  ],
+  "network_calls": 2,
+  "successful_calls": 2,
+  "runs": [
+    {
+      "status": "ok",
+      "mode": "advisory-only",
+      "calls": 1,
+      "elapsed_ms": 1761,
+      "model": "jev-1.13.0",
+      "answers": {
+        "c0": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "backup": 0.19,
+            "review": 0.68,
+            "keep": 0.13
+          },
+          "confidence": 0.51
+        },
+        "c1": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "backup": 0.18,
+            "review": 0.67,
+            "keep": 0.15
+          },
+          "confidence": 0.51
+        },
+        "c2": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "backup": 0.17,
+            "review": 0.7,
+            "keep": 0.13
+          },
+          "confidence": 0.55
+        },
+        "c3": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "backup": 0.15,
+            "review": 0.71,
+            "keep": 0.14
+          },
+          "confidence": 0.57
+        },
+        "c4": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "backup": 0.19,
+            "review": 0.65,
+            "keep": 0.16
+          },
+          "confidence": 0.47
+        },
+        "c5": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "backup": 0.2,
+            "review": 0.65,
+            "keep": 0.15
+          },
+          "confidence": 0.47
+        },
+        "c6": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "backup": 0.21,
+            "review": 0.62,
+            "keep": 0.17
+          },
+          "confidence": 0.43
+        },
+        "c7": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "review": 1.0,
+            "keep": 0.0
+          },
+          "confidence": 1.0
+        },
+        "c8": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "review": 1.0,
+            "keep": 0.0
+          },
+          "confidence": 1.0
+        },
+        "c9": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "review": 1.0,
+            "keep": 0.0
+          },
+          "confidence": 1.0
+        },
+        "c10": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "review": 1.0,
+            "keep": 0.0
+          },
+          "confidence": 1.0
+        },
+        "c11": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "review": 1.0,
+            "keep": 0.0
+          },
+          "confidence": 1.0
+        },
+        "c12": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "review": 1.0,
+            "keep": 0.0
+          },
+          "confidence": 1.0
+        },
+        "c13": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "review": 0.65,
+            "keep": 0.35
+          },
+          "confidence": 0.29
+        },
+        "c14": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "review": 0.73,
+            "keep": 0.27
+          },
+          "confidence": 0.46
+        },
+        "c15": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "review": 0.67,
+            "keep": 0.33
+          },
+          "confidence": 0.34
+        },
+        "c16": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "backup": 0.12,
+            "review": 0.86,
+            "keep": 0.02
+          },
+          "confidence": 0.8
+        },
+        "c17": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "backup": 0.16,
+            "review": 0.78,
+            "keep": 0.06
+          },
+          "confidence": 0.67
+        },
+        "c18": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "backup": 0.17,
+            "review": 0.75,
+            "keep": 0.08
+          },
+          "confidence": 0.62
+        },
+        "c19": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "backup": 0.2,
+            "review": 0.74,
+            "keep": 0.06
+          },
+          "confidence": 0.61
+        }
+      },
+      "usage": {
+        "input_tokens": 4687,
+        "output_tokens": 670
+      }
+    },
+    {
+      "status": "ok",
+      "mode": "advisory-only",
+      "calls": 1,
+      "elapsed_ms": 1821,
+      "model": "jev-1.13.0",
+      "answers": {
+        "c0": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "backup": 0.24,
+            "review": 0.63,
+            "keep": 0.13
+          },
+          "confidence": 0.45
+        },
+        "c1": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "backup": 0.16,
+            "review": 0.72,
+            "keep": 0.12
+          },
+          "confidence": 0.58
+        },
+        "c2": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "backup": 0.19,
+            "review": 0.68,
+            "keep": 0.13
+          },
+          "confidence": 0.51
+        },
+        "c3": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "backup": 0.19,
+            "review": 0.71,
+            "keep": 0.1
+          },
+          "confidence": 0.56
+        },
+        "c4": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "backup": 0.19,
+            "review": 0.71,
+            "keep": 0.1
+          },
+          "confidence": 0.56
+        },
+        "c5": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "backup": 0.19,
+            "review": 0.66,
+            "keep": 0.15
+          },
+          "confidence": 0.49
+        },
+        "c6": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "backup": 0.2,
+            "review": 0.63,
+            "keep": 0.17
+          },
+          "confidence": 0.45
+        },
+        "c7": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "review": 1.0,
+            "keep": 0.0
+          },
+          "confidence": 1.0
+        },
+        "c8": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "review": 1.0,
+            "keep": 0.0
+          },
+          "confidence": 1.0
+        },
+        "c9": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "review": 1.0,
+            "keep": 0.0
+          },
+          "confidence": 0.99
+        },
+        "c10": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "review": 1.0,
+            "keep": 0.0
+          },
+          "confidence": 1.0
+        },
+        "c11": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "review": 1.0,
+            "keep": 0.0
+          },
+          "confidence": 1.0
+        },
+        "c12": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "review": 1.0,
+            "keep": 0.0
+          },
+          "confidence": 1.0
+        },
+        "c13": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "review": 0.66,
+            "keep": 0.34
+          },
+          "confidence": 0.32
+        },
+        "c14": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "review": 0.68,
+            "keep": 0.32
+          },
+          "confidence": 0.36
+        },
+        "c15": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "review": 0.7,
+            "keep": 0.3
+          },
+          "confidence": 0.39
+        },
+        "c16": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "backup": 0.1,
+            "review": 0.89,
+            "keep": 0.01
+          },
+          "confidence": 0.83
+        },
+        "c17": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "backup": 0.19,
+            "review": 0.75,
+            "keep": 0.06
+          },
+          "confidence": 0.62
+        },
+        "c18": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "backup": 0.19,
+            "review": 0.74,
+            "keep": 0.07
+          },
+          "confidence": 0.61
+        },
+        "c19": {
+          "type": "choice",
+          "choice": "review",
+          "probabilities": {
+            "backup": 0.18,
+            "review": 0.75,
+            "keep": 0.07
+          },
+          "confidence": 0.63
+        }
+      },
+      "usage": {
+        "input_tokens": 4687,
+        "output_tokens": 670
+      }
+    }
+  ],
+  "decisions": {
+    "review": 40
+  },
+  "input_tokens": 9374,
+  "estimated_input_cost_usd": 0.000393708,
+  "price_per_million_input_usd": 0.042,
+  "price_source": "https://docs.typesafe.ai/models",
+  "billing_statement_verified": false,
+  "delete_option_candidates": 0,
+  "same_choices_across_repeats": true,
+  "notes": [
+    "Existing real files; no generated data or artificial age changes.",
+    "No paths, filenames, session content, source code or credentials sent.",
+    "No labeled ground truth; this does not establish recommendation accuracy.",
+    "No eligible old logs/cache found in this scope; live delete recommendations are not evaluated.",
+    "No-open-handles is a snapshot and does not attest stopped writers."
+  ],
+  "validation_scope": "mixed-real-candidates-v0.2.0",
+  "real_user_data_modified": false,
+  "deletion_actions": 0
+}
