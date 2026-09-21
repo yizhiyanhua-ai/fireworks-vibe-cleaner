@@ -8,15 +8,15 @@ If you use this Skill from Codex or Claude Code, start with the prompts in the R
 
 Requires Python 3.11+, macOS or Linux. Mutation of source/quarantine files additionally requires `lsof`; project-bytecode validation requires Git. No runtime Python dependencies, daemon, or default network requests.
 
-Install the tagged source:
+Install the v0.2.0 release:
 
 ```sh
-git clone --branch v0.1.1 --depth 1 https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner.git
+git clone --branch v0.2.0 --depth 1 https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner.git
 cd fireworks-vibe-cleaner
 python3 scripts/fireworks-vibe-cleaner.py doctor
 ```
 
-Direct script execution needs no package installation. For the shorter `fireworks-vibe-cleaner` command used below, optionally create a virtual environment and run `python -m pip install .`; alternatively replace that command with `python3 scripts/fireworks-vibe-cleaner.py`. During development, use a local checkout and omit the tag clone. Publication and live validation status are recorded in [release notes](releases/v0.1.1.md).
+Direct script execution needs no package installation. For the shorter `fireworks-vibe-cleaner` command used below, optionally create a virtual environment and run `python -m pip install .`; alternatively replace that command with `python3 scripts/fireworks-vibe-cleaner.py`. During development, use a local checkout and omit the tag clone. Publication and live validation status are recorded in [release notes](releases/v0.2.0.md).
 
 To install the Skill, generate the bundle and copy it to the harness you use. These commands intentionally refuse to overwrite an existing installation:
 
@@ -30,6 +30,10 @@ test ! -e "$HOME/.claude/skills/fireworks-vibe-cleaner" && cp -R skills/firework
 ```
 
 The copied Skill includes its Python launcher. Ask your harness to use `fireworks-vibe-cleaner` to inspect space and propose a cleanup scope. It must obtain approval for the exact plan before modifying source files.
+
+## Recommended first step: configure Jev
+
+After installation, securely inject `TYPESAFE_API_KEY` using your secret manager or process environment. Do not paste it into chat or command history. Run `doctor` to check key presence; it makes no network request and does not prove authentication. You can explicitly choose rules-only mode and continue without a key. Actual advice calls need network/cost authorization.
 
 ## Inspect, review, then act
 
@@ -72,17 +76,37 @@ fireworks-vibe-cleaner backup --scan scan.json --id SESSION_CANDIDATE_ID   --out
 fireworks-vibe-cleaner extract --archive /absolute/path/to/new-private-backups/session.zip   --destination /absolute/path/to/new-extraction-directory
 ```
 
-Backup checks archived bytes against hashes. Keep the ZIP and its `.manifest.json` together. Extraction defaults to a 1 GiB byte cap (`extract --max-bytes`). It writes numbered copies into a new directory and checks hashes; it does not rebuild live harness state. **A valid backup is not evidence that a session can resume.** Sources remain untouched, so this increases storage use. Backups are unencrypted and restricted to the source volume; cross-volume moves, encryption and session deletion are not implemented.
+Backup checks archived bytes against hashes. Keep the ZIP and its `.manifest.json` together. Extraction defaults to a 1 GiB byte cap (`extract --max-bytes`). It writes numbered copies into a new directory and checks hashes; it does not rebuild live harness state. **A valid backup is not evidence that a session can resume.** Sources remain untouched, so this increases storage use. Backups are unencrypted and restricted to the source volume; cross-volume moves and encryption are not implemented. Transcript source removal is a separate v0.2.0 flow below.
+
+## Remove verified archived transcripts
+
+This flow is separate from log/cache quarantine. It accepts only recognized old main transcripts with exact copies in existing backups; it never removes subagent/sidechain/fork/unknown-origin transcripts, tool results, checkpoints or assets. `archive-plan` reads and validates the archives; a manifest's success label is insufficient.
+
+Use a fresh scan and keep ZIPs plus manifests in their private source-volume directory. Replace all uppercase placeholders and paths below. Repeat `--id` and `--archive` to select additional inputs. Plan expiry defaults to 3,600 seconds; `--ttl-seconds` must be 1–86,400.
+
+```sh
+fireworks-vibe-cleaner archive-plan --scan scan.json --id SESSION_CANDIDATE_ID --archive /absolute/path/to/private-backups/session.zip --state-dir /absolute/path/to/private-state --max-bytes 104857600 --ttl-seconds 3600 --output archive-plan.json
+# Review the entire plan, its exact hash and history risk before approving.
+fireworks-vibe-cleaner archive-apply --plan archive-plan.json --approve REVIEWED_PLAN_HASH --writers-stopped --acknowledge-history-risk
+fireworks-vibe-cleaner archive-verify --state-dir /absolute/path/to/private-state --run RUN_ID
+# Recovery, if needed; never overwrite an occupied original path.
+fireworks-vibe-cleaner archive-restore --state-dir /absolute/path/to/private-state --run RUN_ID --writers-stopped
+fireworks-vibe-cleaner archive-verify --state-dir /absolute/path/to/private-state --run RUN_ID
+```
+
+`archive-apply` removes selected originals directly after revalidation; it does not quarantine them or delete their archives. Do not pass either acknowledgement flag without the matching user confirmation and stopped writers. History entries may become unavailable because related files and indexes stay unchanged. `archive-restore` restores bytes to exact original paths, allowing a new inode, without updating indexes or proving native continuation. Preserve archives and the run journal. On interruption use `archive-verify`, resolve the specific state, and do not blindly replay removal. Logical bytes removed and observed volume free-space change are different measurements.
 
 ## Optional Jev advice
 
 Supply `TYPESAFE_API_KEY` through your secret manager or process environment, never in command history or a report. Explicitly opt in:
 
 ```sh
-fireworks-vibe-cleaner advise --scan scan.json --id CANDIDATE_ID --enable-network --output advice.json
+fireworks-vibe-cleaner advise --scan scan.json --id CANDIDATE_ID --inspect-activity --enable-network --output advice.json
 ```
 
-One invocation makes at most one TypeSafe API call for 1–20 selected candidates. It sends temporary candidate labels, category, size/age bands, rule eligibility and unknown activity status. It does **not** send paths, filenames, original candidate IDs, session text, source code or free-text reasons. The payload cap is 16 KiB, response cap 64 KiB, network timeout 8 seconds; redirects and automatic retries are disabled.
+One invocation makes at most one TypeSafe API call for 1–20 selected candidates. It sends temporary candidate labels, category, size/age bands, rule eligibility, retention status, local-check status, activity snapshot and allowed actions. It does **not** send paths, filenames, original candidate IDs, session text, source code or free-text reasons. The payload cap is 16 KiB, response cap 64 KiB, network timeout 8 seconds; redirects and automatic retries are disabled.
 
-Jev may suggest `keep`, `review` or `backup`. It cannot authorize deletion, change a plan or override a protection rule. Its confidence is not a probability of safe deletion. Missing credentials, HTTP errors or invalid responses fall back to rules-only mode. Calls may incur provider charges; a one-call cap is not a monetary budget guarantee. Live metadata-only calls succeeded on 2026-09-21 (Jev 1.13.0); see the [measured results in the README](../README.md#real-10-gib-validation-and-live-jev-comparison). Accuracy and superiority over rules remain unverified. Core cleanup does not depend on Jev availability.
+Jev may suggest `keep`, `review`, `backup` or `delete`. `--inspect-activity` performs read-only local `lsof` checks. Delete is offered only for eligible old logs/rebuildable caches after local policy, retention and open-handle checks; sessions never receive a direct delete suggestion. A no-open-handles snapshot is not proof that writers have stopped. It cannot authorize deletion, change a plan or override a protection rule. Its confidence is not a probability of safe deletion. Missing credentials, HTTP errors or invalid responses fall back to rules-only mode. Calls may incur provider charges; a one-call cap is not a monetary budget guarantee. Live metadata-only calls succeeded on 2026-09-21 (Jev 1.13.0); see the [measured results in the README](../README.md#real-10-gib-validation-and-live-jev-comparison). Accuracy and superiority over rules remain unverified. Core cleanup does not depend on Jev availability.
 
+
+The earlier live Jev measurements do not validate v0.2.0 delete recommendations. A [new live call](experiments/real-jev-v02.json) with the expanded action contract returned review for all 20 candidates; no deletion accuracy claim follows. Real-source cleanup requires approval of its exact plan.

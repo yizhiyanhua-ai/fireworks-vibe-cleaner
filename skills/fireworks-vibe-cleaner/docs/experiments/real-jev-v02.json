@@ -1,0 +1,527 @@
+{
+  "schema": 1,
+  "data": "real-live-jev",
+  "date": "2026-09-21",
+  "transport_mocked": false,
+  "real_user_data_modified": false,
+  "network_calls": 1,
+  "successful_calls": 1,
+  "dataset_files": 564,
+  "dataset_bytes": 10932021589,
+  "sample_files": 20,
+  "sample_metadata": [
+    {
+      "candidate": "c0",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "recent",
+      "rule_eligible": false,
+      "active_state": "open_or_unknown",
+      "allowed_actions": [
+        "keep",
+        "review"
+      ],
+      "retention_met": false,
+      "local_policy_checked": true
+    },
+    {
+      "candidate": "c1",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "recent",
+      "rule_eligible": false,
+      "active_state": "no_open_handles",
+      "allowed_actions": [
+        "keep",
+        "review",
+        "backup"
+      ],
+      "retention_met": false,
+      "local_policy_checked": true
+    },
+    {
+      "candidate": "c2",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "recent",
+      "rule_eligible": false,
+      "active_state": "no_open_handles",
+      "allowed_actions": [
+        "keep",
+        "review",
+        "backup"
+      ],
+      "retention_met": false,
+      "local_policy_checked": true
+    },
+    {
+      "candidate": "c3",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "recent",
+      "rule_eligible": false,
+      "active_state": "no_open_handles",
+      "allowed_actions": [
+        "keep",
+        "review",
+        "backup"
+      ],
+      "retention_met": false,
+      "local_policy_checked": true
+    },
+    {
+      "candidate": "c4",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "recent",
+      "rule_eligible": false,
+      "active_state": "no_open_handles",
+      "allowed_actions": [
+        "keep",
+        "review",
+        "backup"
+      ],
+      "retention_met": false,
+      "local_policy_checked": true
+    },
+    {
+      "candidate": "c5",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "recent",
+      "rule_eligible": false,
+      "active_state": "no_open_handles",
+      "allowed_actions": [
+        "keep",
+        "review",
+        "backup"
+      ],
+      "retention_met": false,
+      "local_policy_checked": true
+    },
+    {
+      "candidate": "c6",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "recent",
+      "rule_eligible": false,
+      "active_state": "no_open_handles",
+      "allowed_actions": [
+        "keep",
+        "review",
+        "backup"
+      ],
+      "retention_met": false,
+      "local_policy_checked": true
+    },
+    {
+      "candidate": "c7",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "recent",
+      "rule_eligible": false,
+      "active_state": "no_open_handles",
+      "allowed_actions": [
+        "keep",
+        "review",
+        "backup"
+      ],
+      "retention_met": false,
+      "local_policy_checked": true
+    },
+    {
+      "candidate": "c8",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "recent",
+      "rule_eligible": false,
+      "active_state": "no_open_handles",
+      "allowed_actions": [
+        "keep",
+        "review",
+        "backup"
+      ],
+      "retention_met": false,
+      "local_policy_checked": true
+    },
+    {
+      "candidate": "c9",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "recent",
+      "rule_eligible": false,
+      "active_state": "no_open_handles",
+      "allowed_actions": [
+        "keep",
+        "review",
+        "backup"
+      ],
+      "retention_met": false,
+      "local_policy_checked": true
+    },
+    {
+      "candidate": "c10",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "recent",
+      "rule_eligible": false,
+      "active_state": "no_open_handles",
+      "allowed_actions": [
+        "keep",
+        "review",
+        "backup"
+      ],
+      "retention_met": false,
+      "local_policy_checked": true
+    },
+    {
+      "candidate": "c11",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "recent",
+      "rule_eligible": false,
+      "active_state": "no_open_handles",
+      "allowed_actions": [
+        "keep",
+        "review",
+        "backup"
+      ],
+      "retention_met": false,
+      "local_policy_checked": true
+    },
+    {
+      "candidate": "c12",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "old",
+      "rule_eligible": false,
+      "active_state": "no_open_handles",
+      "allowed_actions": [
+        "keep",
+        "review",
+        "backup"
+      ],
+      "retention_met": true,
+      "local_policy_checked": true
+    },
+    {
+      "candidate": "c13",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "old",
+      "rule_eligible": false,
+      "active_state": "no_open_handles",
+      "allowed_actions": [
+        "keep",
+        "review",
+        "backup"
+      ],
+      "retention_met": true,
+      "local_policy_checked": true
+    },
+    {
+      "candidate": "c14",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "old",
+      "rule_eligible": false,
+      "active_state": "no_open_handles",
+      "allowed_actions": [
+        "keep",
+        "review",
+        "backup"
+      ],
+      "retention_met": true,
+      "local_policy_checked": true
+    },
+    {
+      "candidate": "c15",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "old",
+      "rule_eligible": false,
+      "active_state": "no_open_handles",
+      "allowed_actions": [
+        "keep",
+        "review",
+        "backup"
+      ],
+      "retention_met": true,
+      "local_policy_checked": true
+    },
+    {
+      "candidate": "c16",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "old",
+      "rule_eligible": false,
+      "active_state": "no_open_handles",
+      "allowed_actions": [
+        "keep",
+        "review",
+        "backup"
+      ],
+      "retention_met": true,
+      "local_policy_checked": true
+    },
+    {
+      "candidate": "c17",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "old",
+      "rule_eligible": false,
+      "active_state": "no_open_handles",
+      "allowed_actions": [
+        "keep",
+        "review",
+        "backup"
+      ],
+      "retention_met": true,
+      "local_policy_checked": true
+    },
+    {
+      "candidate": "c18",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "old",
+      "rule_eligible": false,
+      "active_state": "no_open_handles",
+      "allowed_actions": [
+        "keep",
+        "review",
+        "backup"
+      ],
+      "retention_met": true,
+      "local_policy_checked": true
+    },
+    {
+      "candidate": "c19",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "old",
+      "rule_eligible": false,
+      "active_state": "no_open_handles",
+      "allowed_actions": [
+        "keep",
+        "review",
+        "backup"
+      ],
+      "retention_met": true,
+      "local_policy_checked": true
+    }
+  ],
+  "request_sha256": "d38ac5104792b39e79c29766e448bb186b780328cf2994cf63592f36e022d3d1",
+  "runs": [
+    {
+      "status": "ok",
+      "calls": 1,
+      "mode": "advisory-only",
+      "model": "jev-1.13.0",
+      "elapsed_ms": 2620,
+      "answers": {
+        "c0": {
+          "choice": "review",
+          "confidence": 1.0,
+          "probabilities": {
+            "review": 1.0,
+            "keep": 0.0
+          }
+        },
+        "c1": {
+          "choice": "review",
+          "confidence": 0.79,
+          "probabilities": {
+            "backup": 0.14,
+            "review": 0.86,
+            "keep": 0.0
+          }
+        },
+        "c2": {
+          "choice": "review",
+          "confidence": 0.84,
+          "probabilities": {
+            "backup": 0.1,
+            "review": 0.9,
+            "keep": 0.0
+          }
+        },
+        "c3": {
+          "choice": "review",
+          "confidence": 0.76,
+          "probabilities": {
+            "backup": 0.16,
+            "review": 0.84,
+            "keep": 0.0
+          }
+        },
+        "c4": {
+          "choice": "review",
+          "confidence": 0.7,
+          "probabilities": {
+            "backup": 0.19,
+            "review": 0.8,
+            "keep": 0.01
+          }
+        },
+        "c5": {
+          "choice": "review",
+          "confidence": 0.76,
+          "probabilities": {
+            "backup": 0.16,
+            "review": 0.84,
+            "keep": 0.0
+          }
+        },
+        "c6": {
+          "choice": "review",
+          "confidence": 0.75,
+          "probabilities": {
+            "backup": 0.16,
+            "review": 0.83,
+            "keep": 0.01
+          }
+        },
+        "c7": {
+          "choice": "review",
+          "confidence": 0.79,
+          "probabilities": {
+            "backup": 0.13,
+            "review": 0.86,
+            "keep": 0.01
+          }
+        },
+        "c8": {
+          "choice": "review",
+          "confidence": 0.73,
+          "probabilities": {
+            "backup": 0.17,
+            "review": 0.82,
+            "keep": 0.01
+          }
+        },
+        "c9": {
+          "choice": "review",
+          "confidence": 0.68,
+          "probabilities": {
+            "backup": 0.21,
+            "review": 0.79,
+            "keep": 0.0
+          }
+        },
+        "c10": {
+          "choice": "review",
+          "confidence": 0.7,
+          "probabilities": {
+            "backup": 0.19,
+            "review": 0.81,
+            "keep": 0.0
+          }
+        },
+        "c11": {
+          "choice": "review",
+          "confidence": 0.79,
+          "probabilities": {
+            "backup": 0.14,
+            "review": 0.85,
+            "keep": 0.01
+          }
+        },
+        "c12": {
+          "choice": "review",
+          "confidence": 0.47,
+          "probabilities": {
+            "backup": 0.14,
+            "review": 0.65,
+            "keep": 0.21
+          }
+        },
+        "c13": {
+          "choice": "review",
+          "confidence": 0.38,
+          "probabilities": {
+            "backup": 0.18,
+            "review": 0.59,
+            "keep": 0.23
+          }
+        },
+        "c14": {
+          "choice": "review",
+          "confidence": 0.42,
+          "probabilities": {
+            "backup": 0.17,
+            "review": 0.62,
+            "keep": 0.21
+          }
+        },
+        "c15": {
+          "choice": "review",
+          "confidence": 0.37,
+          "probabilities": {
+            "backup": 0.19,
+            "review": 0.58,
+            "keep": 0.23
+          }
+        },
+        "c16": {
+          "choice": "review",
+          "confidence": 0.37,
+          "probabilities": {
+            "backup": 0.17,
+            "review": 0.58,
+            "keep": 0.25
+          }
+        },
+        "c17": {
+          "choice": "review",
+          "confidence": 0.42,
+          "probabilities": {
+            "backup": 0.18,
+            "review": 0.62,
+            "keep": 0.2
+          }
+        },
+        "c18": {
+          "choice": "review",
+          "confidence": 0.48,
+          "probabilities": {
+            "backup": 0.16,
+            "review": 0.65,
+            "keep": 0.19
+          }
+        },
+        "c19": {
+          "choice": "review",
+          "confidence": 0.5,
+          "probabilities": {
+            "backup": 0.14,
+            "review": 0.67,
+            "keep": 0.19
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 4936,
+        "output_tokens": 726
+      }
+    }
+  ],
+  "decisions": {
+    "review": 20
+  },
+  "median_end_to_end_ms": 2620,
+  "same_choices_across_repeats": true,
+  "input_tokens": 4936,
+  "estimated_input_cost_usd": 0.000207312,
+  "price_per_million_input_usd": 0.042,
+  "price_source": "https://docs.typesafe.ai/models",
+  "billing_statement_verified": false,
+  "deletion_actions": 0,
+  "rule_baseline": "Retain all original sessions; no cleanup without human confirmation.",
+  "notes": [
+    "Twenty representative metadata-only candidates at most; not transcript semantic review.",
+    "Repeated live calls measure observed consistency and round-trip latency only.",
+    "No labeled ground truth: accuracy or superiority over rules is not established.",
+    "Token-price estimate is not an authoritative billing receipt; failed-call usage is unknown."
+  ],
+  "comparison_scope": "v0.2 local evidence and dynamic action contract; not a deletion safety accuracy benchmark"
+}

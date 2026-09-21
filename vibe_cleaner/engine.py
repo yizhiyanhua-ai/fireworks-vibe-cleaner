@@ -63,9 +63,10 @@ def idle_check(items: list[Json]) -> None:
     """Fail closed on uncertain lsof output. Operator must also quiesce writers."""
     if not shutil.which("lsof"):
         raise Refused("lsof is required for writes")
-    for item in items:
-        path = str(Path(item["root"]) / item["relative"])
-        result = subprocess.run(["lsof", "-nP", "-F", "p", "--", path],
+    # One lsof process per bounded batch, not per file in a large review.
+    for start in range(0, len(items), 32):
+        paths = [str(Path(item["root"]) / item["relative"]) for item in items[start:start + 32]]
+        result = subprocess.run(["lsof", "-nP", "-F", "p", "--", *paths],
                                 capture_output=True, timeout=10)
         if result.returncode != 1 or result.stdout or result.stderr:
             raise Refused("File is open, or open-handle inspection is inconclusive")

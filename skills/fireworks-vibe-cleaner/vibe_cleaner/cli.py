@@ -11,7 +11,7 @@ import shutil
 import subprocess
 import sys
 
-from . import __version__, backup, engine, jev
+from . import __version__, backup, engine, jev, sessions
 from .common import Json, Refused, load, write
 from .scan import roots_default, scan
 
@@ -59,10 +59,30 @@ def parser() -> argparse.ArgumentParser:
     s.add_argument("--archive", type=Path, required=True)
     s.add_argument("--destination", type=Path, required=True)
     s.add_argument("--max-bytes", type=int, default=1024**3)
+    s = sub.add_parser("archive-plan", help="Review removal of old transcripts already in verified archives")
+    s.add_argument("--scan", type=Path, required=True)
+    s.add_argument("--id", action="append", required=True)
+    s.add_argument("--archive", type=Path, action="append", required=True)
+    s.add_argument("--ttl-seconds", type=int, default=3600, help="Review expiry, at most 86400 seconds")
+    s.add_argument("--state-dir", type=Path, required=True)
+    s.add_argument("--max-bytes", type=int, required=True)
+    s.add_argument("--output", type=Path, required=True)
+    s = sub.add_parser("archive-apply", help="Remove only approved, archived transcripts; retain backups")
+    s.add_argument("--plan", type=Path, required=True)
+    s.add_argument("--approve", required=True)
+    s.add_argument("--writers-stopped", action="store_true")
+    s.add_argument("--acknowledge-history-risk", action="store_true")
+    for name in ("archive-verify", "archive-restore"):
+        s = sub.add_parser(name)
+        s.add_argument("--state-dir", type=Path, required=True)
+        s.add_argument("--run", required=True)
+        if name == "archive-restore":
+            s.add_argument("--writers-stopped", action="store_true")
     s = sub.add_parser("advise", help="Optional one-call Jev review (no deletion authority)")
     s.add_argument("--scan", type=Path, required=True)
     s.add_argument("--id", action="append", required=True)
     s.add_argument("--enable-network", action="store_true")
+    s.add_argument("--inspect-activity", action="store_true", help="Read-only local lsof checks to refine advice")
     s.add_argument("--output", type=Path, required=True)
     return p
 
@@ -78,7 +98,10 @@ def doctor() -> Json:
     return {"version": __version__, "python": platform.python_version(), "platform": sys.platform,
             "harness_versions": versions, "lsof_available": bool(shutil.which("lsof")),
             "jev_key_present": bool(os.getenv("TYPESAFE_API_KEY")), "network_tested": False,
-            "session_deletion": "disabled", "cross_volume_moves": "disabled",
+            "jev_recommended": True,
+            "jev_setup": "Inject TYPESAFE_API_KEY from a secret manager or process environment; never paste it in chat",
+            "session_deletion": "verified-archive-and-exact-human-approval-required",
+            "harness_resume_verified": False, "cross_volume_moves": "disabled",
             "roots": [{"kind": kind, "path": str(path.resolve()), "exists": path.exists()}
                       for kind, path in roots_default()]}
 
@@ -102,7 +125,8 @@ def execute(a: argparse.Namespace) -> Json:
     if a.command == "report":
         current = load(a.scan)
         result = {"summary": current["summary"], "complete": current["complete"],
-                  "errors": current["errors"], "eligible": [i for i in current["items"] if i["eligible"]]}
+                  "errors": current["errors"], "eligible": [i for i in current["items"] if i["eligible"]],
+                  "archive_candidates": [i for i in current["items"] if i.get("archive_eligible")]}
         if a.previous:
             before = load(a.previous)
             if before["roots"] != current["roots"] or not before["complete"] or not current["complete"]:
@@ -130,12 +154,27 @@ def execute(a: argparse.Namespace) -> Json:
         return backup.backup(load(a.scan), a.id, a.output, max_bytes=a.max_bytes)
     if a.command == "extract":
         return backup.extract(a.archive, a.destination, max_bytes=a.max_bytes)
+    if a.command == "archive-plan":
+        result = sessions.make_plan(load(a.scan), a.id, a.archive, a.state_dir, max_bytes=a.max_bytes, ttl=a.ttl_seconds)
+        write(a.output, result)
+        return result
+    if a.command == "archive-apply":
+        return sessions.apply(load(a.plan), a.approve, quiescent=a.writers_stopped,
+                              acknowledge_risk=a.acknowledge_history_risk)
+    if a.command in {"archive-verify", "archive-restore"}:
+        state = a.state_dir.expanduser().absolute()
+        if a.command == "archive-verify":
+            return sessions.verify(state, a.run)
+        return sessions.restore(state, a.run, quiescent=a.writers_stopped)
     if a.command == "advise":
         inventory = load(a.scan)
         items = [i for i in inventory["items"] if i["id"] in a.id]
         if len(items) != len(a.id):
             raise Refused("Unknown or duplicate ID")
+        items = jev.local_evidence(items, inventory, inspect_activity=a.inspect_activity)
         result = jev.advise(items, enabled=a.enable_network)
+        # Private local mapping, never included in the provider request.
+        result["candidate_ids"] = {f"c{n}": item["id"] for n, item in enumerate(items)}
         write(a.output, result)
         return result
     raise Refused("Unknown command")

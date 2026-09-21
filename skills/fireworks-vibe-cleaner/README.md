@@ -6,62 +6,75 @@
 
 [![CI](https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner/actions/workflows/ci.yml/badge.svg)](https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner/actions/workflows/ci.yml) [![MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Use plain language in Codex or Claude Code to find out how much space your coding logs, conversations and caches take up, then decide what to do with them. Checks run locally by default; no additional model API setup is needed.
+Use plain language in Codex or Claude Code to inspect coding logs, conversations and caches, ask Jev for handling suggestions, and approve a concrete plan before any cleanup. Recommended setup starts with Jev; local rules-only use remains available.
 
-**You must approve the specific file list before cleanup. Moving files into quarantine also needs your approval; permanently deleting them needs a separate confirmation.**
+**Cleanup requires human approval of the specific plan.** v0.2.0 can verify existing archives, remove approved old main transcripts and restore their original paths. Byte restoration does not establish native conversation continuation.
 
 ## Use it from Codex or Claude Code
 
-### 1. Ask your AI to install it
+### 1. Install, then configure Jev
 
-Paste this into the Codex or Claude Code session you use:
+> Install fireworks-vibe-cleaner v0.2.0 from https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner into this tool's personal Skill directory. Do not overwrite an existing installation or clean any files. Then help me configure Jev securely.
 
-> Install fireworks-vibe-cleaner from https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner using the published v0.1.1 release. Put it in this tool's personal Skill directory, and don't overwrite an existing installation. Check the requirements and tell me whether it is ready to use. Don't clean up any files yet.
+You need macOS/Linux and Python 3.11+. See the [manual installation guide](docs/cli.md#install). Jev uses `TYPESAFE_API_KEY`, injected through a secret manager or process environment; never paste the key into chat, a report or command history. `doctor` checks whether a key is present, not whether authentication or inference succeeds.
 
-You need macOS or Linux and Python 3.11 or later. Your AI can check what is missing; if it cannot run the installation, follow the [manual installation guide](docs/cli.md#install). Once installed, ask your AI to use `fireworks-vibe-cleaner` by name.
+> Explain Jev's metadata and possible charges before making a network call. If I choose rules-only mode, continue locally without a key.
 
-### 2. Find out where the space is going
+Jev is recommended for suggestions, but network calls still require authorization. It receives coarse metadata, not paths, filenames, conversation text or code. Its choices are **keep, review, backup or delete**; delete is offered only for locally checked old logs/rebuildable caches with a clear open-handle snapshot. This snapshot does not prove writers have stopped. Jev cannot approve or execute deletion. Missing credentials and provider failures fall back to local rules.
 
-> Use fireworks-vibe-cleaner to check how much space Codex and Claude Code are using. Show me the main sources of disk usage, old logs or caches worth reviewing, and anything that must be kept. Show me the findings first; don't move or delete files.
+### 2. Inspect and ask for recommendations
 
-It checks the two tools' data directories and lists their usage and cleanup candidates. To include a project, give it that project's path. It does not scan your whole disk by default, and it should tell you about directories it skipped or files it could not read.
+> Use fireworks-vibe-cleaner to inspect Codex and Claude Code storage. Show the main sources of usage and what must be kept. For selected candidates, check local activity and, if I've authorized the call, ask Jev whether to back up, keep, review or consider deleting them. Show me the results before moving or deleting anything.
 
-### 3. Review the plan before approving cleanup
+Project roots are opt-in. Scans do not cover the whole disk; skipped directories and unreadable files must be disclosed. Unknown activity, protected objects and credentials never acquire deletion authority from model output.
 
-> Based on that scan, show me a specific cleanup plan: which files, how much space they take up, why they can be handled, what you will do with them, and whether I can undo it. Wait for me to approve this plan before acting.
+### 3. Approve the exact plan
 
-Your AI must explain the scope and method first. A general request to “clean things up” does not approve deleting an unseen set of files. Your confirmation applies to that specific plan; changed files or scope require a new confirmation.
+> Show the exact files, method, bytes, recovery limits and plan hash. Wait for my approval of that plan. If it involves archived conversations, also explain that history may become unavailable and restoring file bytes does not prove I can continue the conversation.
 
-The supported cleanup flow first moves approved old logs or caches into a quarantine folder on the same disk. After checking the result, you can restore them or separately approve permanent deletion. **Moving files into quarantine does not free disk space.** Before cleanup, the relevant tools or project processes must stop writing to those files; your AI should explain what you need to do.
+There are two separate cleanup paths:
+
+- **Old logs/caches:** approve quarantine, verify it, then restore or separately approve permanent purge. Same-volume quarantine releases **zero bytes**.
+- **Already-backed-up main transcripts:** `archive-plan` validates existing archives and selected source bytes. Only after exact-plan approval, stopped writers and explicit history-risk acknowledgement does `archive-apply` remove the selected original transcript files while retaining the archives. Related files and harness indexes are unchanged.
+
+A broad cleanup request does not approve unseen files. Stop relevant writers before mutation; `--writers-stopped` records an acknowledgement, not a process-stopping action. Changed scope or source requires a new plan.
 
 ## Other things you can ask
 
 | What you want | What to tell your AI |
 | --- | --- |
-| Check a project | “Use fireworks-vibe-cleaner to inspect this project: `<absolute project path>`. Just report disk usage for now; don't change files.” |
-| Keep important files | “Keep logs from the last 30 days, and leave `<path to keep>` alone. Show me the remaining candidates first.” |
-| Back up old conversations | “Find large older conversations and list what you would back up, including the extra space needed. Verify the backup contents and keep the originals.” |
-| Undo a quarantine operation | “Restore the files from the quarantine operation I just approved. If a file already exists at its original path, don't overwrite it; tell me first.” |
+| Inspect a project | “Inspect `<absolute project path>`; report usage without changing files.” |
+| Preserve important data | “Keep the last 30 days and `<path to keep>`; show remaining candidates.” |
+| Back up conversations | “Back up selected old conversations, verify bytes and retain originals.” |
+| Remove already archived originals | “Prepare an archive-removal plan for these main transcripts. Verify the existing backups, show the exact scope and history risk, and wait for my confirmation.” |
+| Recover archived originals | “Restore the approved archive-removal run to its exact original paths. Do not overwrite existing files or claim conversation continuation.” |
+| Undo quarantine | “Restore the approved log/cache quarantine; report conflicts without overwriting.” |
 
-Session backups use additional space, and the current version does not delete original conversations. Matching backup contents also does not prove that you can continue the conversation in Codex or Claude Code.
+`archive-restore` restores exact bytes at original paths; a new inode is expected. It does not rebuild indexes or restore complete harness state. Preserve archives, manifests and the run journal. Backup-only operations retain originals and consume additional storage.
 
-For optional advice from Jev on uncertain candidates, you can say:
+## Supported scope
 
-> Ask Jev for a second opinion on these candidates. First explain what information would be sent and whether there is a charge, then wait for my approval to make the network call. Show me the advice; don't use it to clean up files automatically.
-
-Jev is optional, requires a TypeSafe API key and may incur charges. It receives metadata such as file category, size and age bands, without paths, filenames, conversation text or code. Its advice never replaces your cleanup approval. You can inspect and clean supported files without Jev.
-
-## What it can handle today
-
-| Content | Current behavior |
+| Content | v0.2.0 behavior |
 | --- | --- |
-| The tools' own older logs | Recognizes Codex `log/codex-tui.log`, `logs/codex-tui.log` and Claude `debug/` logs; keeps the last 30 days by default and lists older files as candidates |
-| Python project caches | Only `__pycache__/*.pyc` with existing Git-tracked source; the cache itself must be ignored and untracked by Git |
-| Conversations, tool results, checkpoints and generated files | Reports usage and can back up selected files; keeps the originals |
-| Codex worktrees | Inspects and classifies them; does not automatically remove them |
-| Source code, memories, credentials, databases and unrecognized content | Excluded from cleanup |
+| Codex `log/codex-tui.log`, `logs/codex-tui.log`; Claude `debug/` logs | Old recognized regular files may use approved quarantine and separate purge |
+| Python `__pycache__/*.pyc` | Requires existing Git-tracked source; cache ignored and untracked |
+| Recognized old main transcripts | Backup first; separate archive plan, exact approval and history-risk acknowledgement before removal |
+| Subagent, sidechain, fork or unknown-origin transcripts; tool results, checkpoints and assets | No source removal; backup-only where supported |
+| Worktrees, source, memories, credentials, databases, unknown objects | No automatic deletion |
 
-For full commands, requirements and recovery steps, see the [manual installation and CLI guide](docs/cli.md). See [compatibility](docs/compatibility.md) for supported scope. Local scan reports may contain private paths; keep them on your machine.
+See the [CLI guide](docs/cli.md), [compatibility](docs/compatibility.md) and [v0.2.0 evidence record](docs/releases/v0.2.0.md). Keep local reports and recovery data private.
+
+The following measurements predate v0.2.0 archive removal and its expanded Jev choices. They do not validate these new capabilities.
+
+## v0.2.0 workflow validation
+
+| Check | Result |
+| --- | --- |
+| Archived removal, original-path restore, approval refusals, interrupted/read-only recovery | 63 local tests passed using isolated test data |
+| Live Jev with the expanded action contract | 1 call, 20 real candidates, all `review`; 4,936 input tokens, 2,620 ms |
+| New real-source cleanup | Awaiting approval of the exact file list; not executed. Test-fixture deletion is not real-user space recovery. |
+
+[Sanitized live Jev record](docs/experiments/real-jev-v02.json). No accuracy or advantage over rules is established.
 
 ## Real 10 GiB validation and live Jev comparison
 
@@ -109,4 +122,4 @@ ruff check .
 mypy vibe_cleaner
 ```
 
-CI passed on Linux/macOS with Python 3.11/3.14, covering safety and recovery tests, packaging and clean installation without model credentials. See the workflow files and [release notes](docs/releases/v0.1.1.md) for actual evidence; a configured workflow is not a passing run. See [CONTRIBUTING.md](CONTRIBUTING.md) for development and [SECURITY.md](SECURITY.md) for the threat boundary. MIT © 2026 Fireworks.
+All 63 local tests passed, covering the CLI workflow and interrupted recovery. CI runs on macOS/Linux with Python 3.11/3.14; check the [actual workflow results](https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner/actions/workflows/ci.yml). See [release notes](docs/releases/v0.2.0.md), [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md). MIT © 2026 Fireworks.

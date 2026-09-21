@@ -12,7 +12,7 @@ class JevContract(unittest.TestCase):
         self.items = [{"identity": {"size": 100}, "age_days": 60, "category": "log", "eligible": True}]
         self.request = jev.packet(self.items)
         self.response = {"model": "jev-preview", "answers": {"c0": {"type": "choice", "choice": "keep",
-                         "probabilities": {"keep": 1.0, "review": 0.0, "backup": 0.0}, "confidence": 1.0}},
+                         "probabilities": {"keep": 1.0, "review": 0.0}, "confidence": 1.0}},
                          "usage": {"input_tokens": 1, "output_tokens": 1}}
 
     def test_invalid_distributions(self):
@@ -53,3 +53,53 @@ class JevContract(unittest.TestCase):
             jev.packet(self.items * 21)
         with self.assertRaises(Refused):
             jev.packet([])
+
+    def test_delete_requires_local_policy_retention_and_activity_evidence(self):
+        item = self.items[0]
+        self.assertNotIn("delete", self.request["questions"]["c0"]["criteria"])
+        eligible = dict(item, local_policy_checked=True, retention_met=True, active_state="no_open_handles")
+        request = jev.packet([eligible])
+        self.assertIn("delete", request["questions"]["c0"]["criteria"])
+        for delta in [{"active_state": "unknown"}, {"active_state": "open_or_unknown"},
+                      {"retention_met": False}, {"local_policy_checked": False}, {"category": "protected"},
+                      {"category": "worktree"}, {"category": "session"}]:
+            p = jev.packet([{**eligible, **delta}])
+            self.assertNotIn("delete", p["questions"]["c0"]["criteria"])
+
+    def test_protected_or_open_objects_never_receive_backup_or_delete(self):
+        for item in [dict(self.items[0], category="protected"),
+                     dict(self.items[0], category="session", active_state="open_or_unknown"),
+                     dict(self.items[0], category="session", backup_eligible=False)]:
+            self.assertEqual(set(jev.packet([item])["questions"]["c0"]["criteria"]), {"keep", "review"})
+
+    def test_cross_candidate_actions_rejected(self):
+        request = jev.packet([self.items[0], dict(self.items[0], category="session", backup_eligible=True,
+                                                local_policy_checked=True)])
+        data = copy.deepcopy(self.response)
+        data["answers"]["c1"] = {"type": "choice", "choice": "backup", "confidence": 1.0,
+                                   "probabilities": {"keep": 0.0, "review": 0.0, "backup": 1.0}}
+        jev.validate_response(data, request)
+        data["answers"]["c0"], data["answers"]["c1"] = data["answers"]["c1"], data["answers"]["c0"]
+        with self.assertRaises(Refused):
+            jev.validate_response(data, request)
+
+    def test_choice_is_max_probability_and_extra_text_is_dropped(self):
+        data = copy.deepcopy(self.response)
+        data["answers"]["c0"]["explanation"] = "untrusted private output"
+        data["extra"] = "must not persist"
+        result = jev.validate_response(data, self.request)
+        self.assertNotIn("extra", result)
+        self.assertNotIn("explanation", result["answers"]["c0"])
+        data["answers"]["c0"]["choice"] = "review"
+        with self.assertRaises(Refused):
+            jev.validate_response(data, self.request)
+
+    def test_delete_is_only_advice_and_never_calls_executor(self):
+        item = dict(self.items[0], local_policy_checked=True, retention_met=True, active_state="no_open_handles")
+        response = {"model": "jev-test", "answers": {"c0": {"type": "choice", "choice": "delete",
+                    "probabilities": {"keep": 0.0, "review": 0.0, "delete": 1.0}, "confidence": 1.0}},
+                    "usage": {"input_tokens": 1, "output_tokens": 1}}
+        with patch.dict(os.environ, {"TYPESAFE_API_KEY": "test-only"}), patch("vibe_cleaner.engine.apply") as execute:
+            result = jev.advise([item], enabled=True, transport=lambda *a: response)
+        self.assertEqual(result["answers"]["c0"]["choice"], "delete")
+        execute.assert_not_called()

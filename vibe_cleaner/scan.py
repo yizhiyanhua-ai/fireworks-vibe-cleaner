@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import os
+import re
 from pathlib import Path
 import stat
 import subprocess
@@ -18,6 +19,23 @@ PROTECTED = {"memory", "memories", "agent-memory", "skills", "plugins", ".git",
              "node_modules", ".venv", "venv"}
 
 
+def transcript_id(relative: str, kind: str) -> str | None:
+    """Only top-level harness transcripts, never attached tool/subagent files."""
+    p = Path(relative)
+    uuid = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
+    if kind == "codex" and p.parts and p.parts[0] in {"sessions", "archived_sessions"}:
+        if len(p.parts) not in {2, 5}:
+            return None
+        if len(p.parts) == 5 and not all(x.isdecimal() for x in p.parts[1:4]):
+            return None
+        match = re.fullmatch(r"rollout-[0-9T-]+-(" + uuid + r")\.jsonl", p.name)
+        return match[1] if match else None
+    if kind == "claude" and len(p.parts) == 3 and p.parts[0] == "projects":
+        match = re.fullmatch("(" + uuid + r")\.jsonl", p.name)
+        return match[1] if match else None
+    return None
+
+
 def classify(root: Path, rel: str, kind: str) -> tuple[str, str]:
     p = Path(rel)
     if any(x in PROTECTED for x in p.parts):
@@ -26,14 +44,14 @@ def classify(root: Path, rel: str, kind: str) -> tuple[str, str]:
         return "protected", "credentials or application state"
     if kind == "codex":
         if p.parts[0] in {"sessions", "archived_sessions"} and p.suffix == ".jsonl":
-            return "session", "transcript backup only; resume dependencies unverified"
+            return "session", "transcript; archived removal requires main-session checks"
         if len(p.parts) == 2 and p.parts[0] in {"log", "logs"} and p.name == "codex-tui.log":
             return "log", "known harness diagnostic log"
         if p.parts[0] == "worktrees":
             return "worktree", "use harness/Git lifecycle; never remove automatically"
     if kind == "claude":
         if p.parts[0] == "projects" and (p.suffix == ".jsonl" or "tool-results" in p.parts):
-            return "session", "session/tool result backup only; resume dependencies unverified"
+            return "session", "session/tool result; only recognized main transcripts support archived removal"
         if p.parts[0] == "debug" and p.suffix in {".txt", ".log"}:
             return "log", "known harness diagnostic log"
         if p.parts[0] == "file-history":
@@ -106,10 +124,14 @@ def scan(roots: list[tuple[str, Path]], *, min_age_days: int = 30,
                     category, reason = classify(root, rel, kind)
                     age = max(0.0, (now - s.st_mtime) / 86400)
                     allowed = category in {"log", "bytecode"} and age >= min_age_days
+                    archive_allowed = (category == "session" and age >= min_age_days
+                                       and transcript_id(rel, kind) is not None)
                     if not stat.S_ISREG(s.st_mode) or s.st_nlink != 1 or s.st_dev != rs.st_dev:
                         allowed, reason = False, "nonregular, hardlinked or different volume"
+                        archive_allowed = False
                     if any(path.match(pattern) for pattern in (keep or [])):
                         allowed, reason = False, "user keep rule"
+                        archive_allowed = False
                     key = (s.st_dev, s.st_ino)
                     allocated = getattr(s, "st_blocks", 0) * 512 if key not in seen else 0
                     seen.add(key)
@@ -117,6 +139,8 @@ def scan(roots: list[tuple[str, Path]], *, min_age_days: int = 30,
                                   "relative": rel, "adapter": kind, "category": category,
                                   "identity": identity(s), "allocated_bytes": allocated,
                                   "age_days": round(age, 2), "eligible": allowed,
+                                  "archive_eligible": archive_allowed,
+                                  "retention_met": age >= min_age_days,
                                   "reason": reason, "active_state": "unknown"})
                 except OSError:
                     errors.append({"path": str(path), "error": "unreadable_file"})
@@ -140,6 +164,8 @@ def summarize(items: list[Json]) -> Json:
     return {"files": len(items), "categories": categories,
             "eligible_files": sum(bool(i["eligible"]) for i in items),
             "eligible_allocated_bytes": sum(i["allocated_bytes"] for i in items if i["eligible"]),
+            "archive_candidate_files": sum(bool(i.get("archive_eligible")) for i in items),
+            "archive_candidate_logical_bytes": sum(i["identity"]["size"] for i in items if i.get("archive_eligible")),
             "note": "Eligible is preliminary; not authorization or verified reclaimable space."}
 
 

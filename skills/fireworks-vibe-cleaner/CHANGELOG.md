@@ -1,6 +1,15 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 — 2026-09-21
+
+- Add verified-archive plans and separately approved removal of recognized old main transcripts, with byte/path restoration and explicit history-risk acknowledgement. No index repair or native continuation claim.
+- Keep linked/unknown-origin transcripts, tool results, checkpoints and assets out of source removal.
+- Recommend Jev setup early, retain rules-only fallback, and add dynamic keep/review/backup/delete advice with local checks and no execution authority.
+- Add `advise --inspect-activity`, per-candidate response validation and privacy-preserving local evidence.
+- 63 local tests passed, including the black-box CLI archive roundtrip and interrupted read-only recovery. One new real Jev call returned review for all 20 candidates; real-original cleanup awaits exact human approval.
+
+### Historical measurements retained in this release
+
 
 - Validate 564 real session files (10.181 GiB) into 5.308 GiB of archives, with complete stream restore and final source hashes matching. No original cleanup occurred.
 - Add actual Jev metadata-only comparison: three repeated 20-candidate calls plus a connectivity canary. Preserve native-reader failures and distinguish them from byte recovery.
@@ -20,4 +29,4 @@
 - Add opt-in metadata-only Jev advice with rules-only fallback and no deletion authority.
 - Add bilingual documentation, packaging and CI configuration.
 
-See [release evidence and limits](docs/releases/v0.1.0.md). This entry does not establish a published release or passing remote CI.
+See [v0.2.0 release evidence and limits](docs/releases/v0.2.0.md). Historical entries do not establish passing CI for this commit; consult its actual workflow run.

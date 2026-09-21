@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Reviewed archived-transcript removal plan",
+  "type": "object",
+  "required": [
+    "schema",
+    "policy",
+    "action",
+    "hash",
+    "created_at",
+    "expires_at",
+    "state_dir",
+    "max_bytes",
+    "min_age_days",
+    "items",
+    "archives",
+    "risk",
+    "harness_resume_verified"
+  ],
+  "properties": {
+    "schema": {
+      "const": 1
+    },
+    "policy": {
+      "const": "conservative-files-v1"
+    },
+    "action": {
+      "const": "remove-archived-transcripts"
+    },
+    "hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "max_bytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "min_age_days": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "harness_resume_verified": {
+      "const": false
+    },
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 10000,
+      "items": {
+        "type": "object",
+        "required": [
+          "root",
+          "relative",
+          "adapter",
+          "category",
+          "identity",
+          "sha256",
+          "archive_eligible",
+          "backup"
+        ]
+      }
+    },
+    "archives": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "required": [
+          "root",
+          "relative",
+          "identity",
+          "sha256"
+        ]
+      }
+    }
+  }
+}

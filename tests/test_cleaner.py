@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+import py_compile
 import subprocess
 import tempfile
 import time
@@ -48,6 +49,17 @@ class CleanerTests(unittest.TestCase):
             result = self.inventory()
         self.assertEqual(result["summary"]["eligible_files"], 1)
         self.assertEqual(before.st_mtime_ns, self.log.stat().st_mtime_ns)
+
+    def test_idle_checks_batch_paths_without_weakening_failure_gate(self):
+        items = [{"root": str(self.root), "relative": f"logs/{n}.log"} for n in range(33)]
+        clean = subprocess.CompletedProcess([], 1, stdout=b"", stderr=b"")
+        with patch("vibe_cleaner.engine.subprocess.run", return_value=clean) as run:
+            engine.idle_check(items)
+            self.assertEqual(run.call_count, 2)
+            self.assertEqual(len(run.call_args_list[0].args[0]), 37)
+        opened = subprocess.CompletedProcess([], 0, stdout=b"p123\n", stderr=b"")
+        with patch("vibe_cleaner.engine.subprocess.run", side_effect=[clean, opened]), self.assertRaises(Refused):
+            engine.idle_check(items)
 
     def test_protected_sessions_memory_database_assets_worktree(self):
         for rel in ["sessions/active.jsonl", "archived_sessions/old.jsonl", "memories/x.log",
@@ -326,12 +338,50 @@ class CleanerTests(unittest.TestCase):
             self.assertNotIn("codex-tui.log", raw)
             self.assertNotIn("synthetic diagnostic", raw)
             return {"model": "jev-test", "answers": {"c0": {"type": "choice", "choice": "review",
-                    "probabilities": {"keep": 0.1, "review": 0.9, "backup": 0.0}, "confidence": 0.7}},
+                    "probabilities": {"keep": 0.1, "review": 0.9}, "confidence": 0.7}},
                     "usage": {"input_tokens": 100, "output_tokens": 10}}
         with patch.dict(os.environ, {"TYPESAFE_API_KEY": "test-only"}):
             result = jev.advise(items, enabled=True, transport=transport)
         self.assertEqual(result["status"], "ok")
         self.assertEqual(result["mode"], "advisory-only")
+
+    def test_jev_local_evidence_rechecks_real_files_and_open_handles(self):
+        inv = self.inventory()
+        rows = jev.local_evidence(inv["items"], inv, inspect_activity=True)
+        self.assertIn("delete", jev.packet(rows)["questions"]["c0"]["criteria"])
+        with self.log.open("rb"):
+            rows = jev.local_evidence(inv["items"], inv, inspect_activity=True)
+            self.assertNotIn("delete", jev.packet(rows)["questions"]["c0"]["criteria"])
+        self.log.write_text("changed after scan")
+        rows = jev.local_evidence(inv["items"], inv, inspect_activity=True)
+        self.assertNotIn("delete", jev.packet(rows)["questions"]["c0"]["criteria"])
+
+    def test_jev_local_keep_credentials_and_lsof_failure(self):
+        kept = scan([("codex", self.root)], keep=["*.log"])
+        rows = jev.local_evidence(kept["items"], kept, inspect_activity=True)
+        self.assertNotIn("delete", jev.packet(rows)["questions"]["c0"]["criteria"])
+        inv = self.inventory()
+        for failure in [Refused("inconclusive"), subprocess.TimeoutExpired("lsof", 10)]:
+            with patch("vibe_cleaner.jev.idle_check", side_effect=failure):
+                rows = jev.local_evidence(inv["items"], inv, inspect_activity=True)
+            self.assertNotIn("delete", jev.packet(rows)["questions"]["c0"]["criteria"])
+        credential = self.root / "auth.json"
+        credential.write_text("synthetic credential placeholder")
+        inv = self.inventory()
+        item = next(i for i in inv["items"] if i["relative"] == "auth.json")
+        item["eligible"] = True
+        rows = jev.local_evidence([item], inv, inspect_activity=True)
+        self.assertEqual(set(jev.packet(rows)["questions"]["c0"]["criteria"]), {"keep", "review"})
+
+    def test_jev_untracked_bytecode_source_cannot_get_delete_advice(self):
+        source = self.root / "example.py"
+        source.write_text("print('synthetic')\n")
+        compiled = Path(py_compile.compile(str(source), doraise=True))
+        os.utime(compiled, (0, 0))
+        inv = scan([("project", self.root)])
+        item = next(i for i in inv["items"] if i["category"] == "bytecode")
+        rows = jev.local_evidence([item], inv, inspect_activity=True)
+        self.assertNotIn("delete", jev.packet(rows)["questions"]["c0"]["criteria"])
 
     def test_jev_service_failure_and_malformed_answer_fail_closed(self):
         items = self.inventory()["items"]

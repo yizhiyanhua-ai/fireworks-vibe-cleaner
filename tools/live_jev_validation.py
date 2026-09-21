@@ -22,6 +22,8 @@ def validate(plan: dict, repeats: int) -> dict:
     items = sorted(plan["items"], key=lambda i: (i["adapter"], i["age_days"], i["identity"]["size"]))
     count = min(20, len(items))
     sample = [items[round(n * (len(items) - 1) / max(1, count - 1))] for n in range(count)]
+    sample = jev.local_evidence(sample, {"min_age_days": plan.get("min_age_days", 30), "keep": plan.get("keep", [])},
+                                inspect_activity=True)
     request = jev.packet(sample)
     runs = []
     for _ in range(repeats):
