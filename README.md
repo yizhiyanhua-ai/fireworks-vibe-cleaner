@@ -14,17 +14,19 @@ Use plain language in Codex or Claude Code to inspect coding logs, conversations
 
 ### 1. Install, then configure Jev
 
-> Install fireworks-vibe-cleaner v0.3.0 from https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner into this tool's personal Skill directory. Do not overwrite an existing installation or clean any files. Then help me configure Jev securely.
+> Install fireworks-vibe-cleaner v0.4.0 from https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner into this tool's personal Skill directory. Do not overwrite an existing installation or clean any files. Then help me configure Jev securely.
 
 You need macOS/Linux and Python 3.11+. See the [manual installation guide](docs/cli.md#install). Jev uses `TYPESAFE_API_KEY`, injected through a secret manager or process environment; never paste the key into chat, a report or command history. `doctor` checks whether a key is present, not whether authentication or inference succeeds.
 
 > Explain Jev's metadata and possible charges before making a network call. If I choose rules-only mode, continue locally without a key.
 
-Jev is recommended for suggestions, but network calls still require authorization. It receives coarse metadata, not paths, filenames, conversation text or code. Its choices are **keep, review, backup or delete**; delete is offered only for locally checked old logs/rebuildable caches with a clear open-handle snapshot. This snapshot does not prove writers have stopped. Jev cannot approve or execute deletion. Missing credentials and provider failures fall back to local rules.
+**Start with Jev for fast triage and handling recommendations.** Local code gathers compact facts; Jev selects keep, review, backup while retaining the original, or prepare a removal proposal, with a reason bound to each choice. Backup and deletion are separate decisions. Transcript removal requires verified backups and approval of its exact plan. Only categories, size bands, retention/protection/header-check results and your selected goal leave the machine, without paths, filenames, transcripts or code. Missing credentials or failed calls are explicitly labeled local fallback.
+
+Jev fits fast, narrow classification decisions. Code handles arithmetic, dates and file validation. Eight candidates per batch and up to three concurrent batches provide early advice; full backup hashes are checked after scope selection. Metadata cannot establish the future value of a conversation: old or large does not mean disposable. See [Jev triage design and limits](docs/jev.md).
 
 ### 2. Inspect and ask for recommendations
 
-> Use fireworks-vibe-cleaner to inspect Codex and Claude Code storage. Show the main sources of usage and what must be kept. For selected candidates, check local activity and, if I've authorized the call, ask Jev whether to back up, keep, review or consider deleting them. Show me the results before moving or deleting anything.
+> Use fireworks-vibe-cleaner to inspect Codex and Claude Code storage. Show the main sources of usage and what must be kept. If I have authorized the call, use Jev for fast triage. Show every selected file, recommendation, reason, backup/removal alternatives, expected impact and unknowns directly in chat. Give suggestions first, then fully verify my selected scope. Do not move or delete anything.
 
 Project roots are opt-in. Scans do not cover the whole disk; skipped directories and unreadable files must be disclosed. Unknown activity, protected objects and credentials never acquire deletion authority from model output.
 
@@ -82,6 +84,24 @@ Incomplete index, file or lineage coverage blocks executable native plans while 
 | Worktrees, source, memories, credentials, databases, unknown objects | No automatic deletion |
 
 See the [CLI guide](docs/cli.md), [compatibility](docs/compatibility.md) and [v0.2.0 evidence record](docs/releases/v0.2.0.md). Keep local reports and recovery data private.
+
+## v0.4.0: real Jev triage latency comparison
+
+On 2026-09-22, the same **33 existing old main transcripts, 1,049,047,931 bytes (about 1.05 GB)** were evaluated with serial and concurrent real provider calls. No provider responses were mocked; full source hashes matched before and after.
+
+| Observation | Serial (1 in flight) | Concurrent (up to 3 in flight) |
+| --- | ---: | ---: |
+| Candidates / actual API calls | 33 / 5 | 33 / 5 |
+| Fresh local fact checks | 7 ms | 8 ms |
+| Provider wall time | 10,063 ms | 3,453 ms |
+| Total suggestion-stage time | **10,070 ms** | **3,461 ms** |
+| Raw Jev choices | 33 prepare-removal | 31 prepare-removal, 2 review |
+| Recommendations after low-confidence routing | 33 review | 5 prepare-removal, 28 review |
+| Actual deletions / reclaimed space | **0 / 0 bytes** | **0 / 0 bytes** |
+
+Concurrent elapsed time was about **66% lower in this comparison**. Timings cover fresh identity/retention/header checks and real inference, reusing an existing selected inventory. Full scans, archive verification and benchmark-only before/after source hashes are excluded. The two runs used 25,628 input tokens, estimated at US$0.001076376 using the [official rate](https://docs.typesafe.ai/models); billing was not verified.
+
+Recommendations differed between runs; low confidence routes to review under a product rule. This sample has no labeled ground truth and establishes neither deletion accuracy nor a repeatable speedup. No real cleanup occurred. Removal preparation still needs recovery-needs review, verified backups, protection checks and explicit approval of the final plan. [Sanitized results](docs/experiments/real-jev-triage-2026-09-22.json) · [Reproduction tool](tools/live_triage_validation.py).
 
 ## v0.3.0 history checks
 
@@ -165,4 +185,4 @@ ruff check .
 mypy vibe_cleaner
 ```
 
-Local tests cover the CLI workflow, native history boundaries and interrupted recovery. CI runs on macOS/Linux with Python 3.11/3.14; check the [actual workflow results](https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner/actions/workflows/ci.yml). See [release notes](docs/releases/v0.3.0.md), [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md). MIT © 2026 Fireworks.
+Local tests cover the CLI workflow, native history boundaries and interrupted recovery. CI runs on macOS/Linux with Python 3.11/3.14; check the [actual workflow results](https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner/actions/workflows/ci.yml). See [release notes](docs/releases/v0.4.0.md), [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md). MIT © 2026 Fireworks.

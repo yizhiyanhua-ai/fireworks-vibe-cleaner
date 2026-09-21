@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.0 — 2026-09-22
+
+- Add Jev-first `triage`: bounded parallel batches, joint action/reason choices, per-file terminal explanations and alternatives.
+- Separate backup-retain from conditional removal preparation. No executable plans or mutations in triage; low confidence and partial provider failures remain explicit review.
+- Require every selected file and its rationale directly in chat before linking a full plan and obtaining exact human confirmation.
+- Real 33-file comparison: serial 10,070 ms versus concurrent 3,461 ms. Source hashes unchanged, no cleanup. Raw Jev preferences and final low-confidence review differed between runs; no accuracy or repeatability claim.
+
 ## 0.3.0 — 2026-09-21
 
 - Add configurable Codex history count, total size and individual size pressure audits. Default triggers: more than 200 unarchived threads or 3 GiB. Never trigger automatic cleanup.

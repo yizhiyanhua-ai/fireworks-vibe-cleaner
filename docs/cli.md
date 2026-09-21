@@ -8,15 +8,15 @@ If you use this Skill from Codex or Claude Code, start with the prompts in the R
 
 Requires Python 3.11+, macOS or Linux. Mutation of source/quarantine files additionally requires `lsof`; project-bytecode validation requires Git. No runtime Python dependencies, daemon, or default network requests.
 
-Install the v0.3.0 release:
+Install the v0.4.0 release:
 
 ```sh
-git clone --branch v0.3.0 --depth 1 https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner.git
+git clone --branch v0.4.0 --depth 1 https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner.git
 cd fireworks-vibe-cleaner
 python3 scripts/fireworks-vibe-cleaner.py doctor
 ```
 
-Direct script execution needs no package installation. For the shorter `fireworks-vibe-cleaner` command used below, optionally create a virtual environment and run `python -m pip install .`; alternatively replace that command with `python3 scripts/fireworks-vibe-cleaner.py`. During development, use a local checkout and omit the tag clone. Publication and live validation status are recorded in [release notes](releases/v0.3.0.md).
+Direct script execution needs no package installation. For the shorter `fireworks-vibe-cleaner` command used below, optionally create a virtual environment and run `python -m pip install .`; alternatively replace that command with `python3 scripts/fireworks-vibe-cleaner.py`. During development, use a local checkout and omit the tag clone. Publication and live validation status are recorded in [release notes](releases/v0.4.0.md).
 
 To install the Skill, generate the bundle and copy it to the harness you use. These commands intentionally refuse to overwrite an existing installation:
 
@@ -96,7 +96,21 @@ fireworks-vibe-cleaner archive-verify --state-dir /absolute/path/to/private-stat
 
 `archive-apply` removes selected originals directly after revalidation; it does not quarantine them or delete their archives. Do not pass either acknowledgement flag without the matching user confirmation and stopped writers. History entries may become unavailable because related files and indexes stay unchanged. `archive-restore` restores bytes to exact original paths, allowing a new inode, without updating indexes or proving native continuation. Preserve archives and the run journal. On interruption use `archive-verify`, resolve the specific state, and do not blindly replay removal. Logical bytes removed and observed volume free-space change are different measurements.
 
-## Optional Jev advice
+## Recommended: fast Jev triage in your terminal
+
+After a read-only `scan`, use an authorized Jev call:
+
+```bash
+fireworks-vibe-cleaner triage --scan scan.json --limit 40 --goal balanced --enable-network --format text --language en --output triage.json
+```
+
+Omit `--enable-network` for explicitly labeled local review. The default selects the largest 40 files in supported categories. Use `--limit 1..100`, or repeat `--id CANDIDATE_ID` for the complete explicitly selected set (up to 100). Goals are `balanced`, `reclaim-space`, and `preserve-history`.
+
+The terminal shows every file, recommendation, reason, facts, alternatives and unknowns. Private JSON preserves Jev's original choice and any low-confidence override. `backup` retains originals; `prepare_removal` only recommends preparing a verified-backup-then-remove proposal; `prepare_cache_cleanup` only prepares quarantine and separately approved purge. This command creates no executable plan and reclaims zero bytes.
+
+After scope selection, perform full hashes and protection/activity checks. Show every method, reason, impact, backup location and exact plan hash directly in chat, then obtain explicit human confirmation before execution. A Markdown link alone is insufficient. See [capability basis, limits and bounds](jev.md).
+
+## Single-call Jev advice (compatibility command)
 
 Supply `TYPESAFE_API_KEY` through your secret manager or process environment, never in command history or a report. Explicitly opt in:
 

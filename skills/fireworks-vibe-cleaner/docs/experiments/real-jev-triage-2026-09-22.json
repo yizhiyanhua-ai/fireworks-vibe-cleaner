@@ -1,0 +1,540 @@
+{
+  "schema": 1,
+  "data": "real-jev-triage",
+  "date": "2026-09-21",
+  "transport_mocked": false,
+  "real_user_data_modified": false,
+  "network_calls": 10,
+  "source_files": 33,
+  "source_logical_bytes": 1049047931,
+  "source_hashes_unchanged": true,
+  "actual_reclaimed_bytes": 0,
+  "goal": "balanced",
+  "source_mutations_executed": false,
+  "runs": [
+    {
+      "timing": {
+        "local_evidence_ms": 7,
+        "provider_wall_ms": 10063,
+        "total_ms": 10070
+      },
+      "provider": {
+        "calls": 5,
+        "batches": 5,
+        "max_concurrency": 1,
+        "request_bytes": 44083,
+        "statuses": {
+          "ok": 5
+        },
+        "models": [
+          "jev-1.13.0"
+        ],
+        "input_tokens": 12814,
+        "output_tokens": 1896
+      },
+      "action_counts": {
+        "review": 33
+      },
+      "decisions": [
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.48,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.4,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.38,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.45,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.39,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.34,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.42,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.42,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.43,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.41,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.37,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.43,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.33,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.4,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.43,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.31,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.44,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.4,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.41,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.41,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.42,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.41,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.45,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.35,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.41,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.38,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.45,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.39,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.4,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.42,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.45,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.42,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.49,
+          "provider_choice": "prepare_verified_removal"
+        }
+      ]
+    },
+    {
+      "timing": {
+        "local_evidence_ms": 8,
+        "provider_wall_ms": 3453,
+        "total_ms": 3461
+      },
+      "provider": {
+        "calls": 5,
+        "batches": 5,
+        "max_concurrency": 3,
+        "request_bytes": 44083,
+        "statuses": {
+          "ok": 5
+        },
+        "models": [
+          "jev-1.13.0"
+        ],
+        "input_tokens": 12814,
+        "output_tokens": 1896
+      },
+      "action_counts": {
+        "prepare_removal": 5,
+        "review": 28
+      },
+      "decisions": [
+        {
+          "action": "prepare_removal",
+          "reason_code": "prepare_verified_removal",
+          "source": "jev",
+          "confidence": 0.52,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.38,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.41,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.37,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.42,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.38,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.38,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.4,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "prepare_removal",
+          "reason_code": "prepare_verified_removal",
+          "source": "jev",
+          "confidence": 0.53,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.38,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.41,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.38,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.33,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.44,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.41,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.38,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "prepare_removal",
+          "reason_code": "prepare_verified_removal",
+          "source": "jev",
+          "confidence": 0.54,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.4,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.41,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.39,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.34,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.32,
+          "provider_choice": "review_uncertain"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.39,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.35,
+          "provider_choice": "review_uncertain"
+        },
+        {
+          "action": "prepare_removal",
+          "reason_code": "prepare_verified_removal",
+          "source": "jev",
+          "confidence": 0.53,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.4,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.46,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.42,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.34,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.41,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.43,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "review",
+          "reason_code": "review_uncertain",
+          "source": "jev-low-confidence",
+          "confidence": 0.34,
+          "provider_choice": "prepare_verified_removal"
+        },
+        {
+          "action": "prepare_removal",
+          "reason_code": "prepare_verified_removal",
+          "source": "jev",
+          "confidence": 0.57,
+          "provider_choice": "prepare_verified_removal"
+        }
+      ]
+    }
+  ],
+  "measurement_scope": "Fresh local eligibility/header checks and real provider calls; reuses a selected scan. Benchmark-only before/after full-source hashes are outside timed triage. No full disk scan or archive verification is timed.",
+  "no_accuracy_claim": true,
+  "no_cleanup_authorization": true,
+  "price_per_million_input_usd": 0.042,
+  "price_source": "https://docs.typesafe.ai/models",
+  "billing_statement_verified": false,
+  "estimated_input_cost_usd": 0.001076376,
+  "date_basis": "UTC",
+  "local_measurement_date": "2026-09-22 Asia/Shanghai"
+}

@@ -15,7 +15,7 @@ from vibe_cleaner import __version__  # noqa: E402
 
 FILES = ["SKILL.md", "README.md", "README.zh.md", "LICENSE", "CHANGELOG.md", "SECURITY.md", "CONTRIBUTING.md",
          "tools/local_experiments.py", "tools/real_validation.py", "tools/large_real_validation.py",
-         "tools/live_jev_validation.py", "tools/native_history_validation.py"]
+         "tools/live_jev_validation.py", "tools/live_triage_validation.py", "tools/native_history_validation.py"]
 DIRS = ["vibe_cleaner", "scripts", "agents", "schemas", "docs", "assets"]
 
 

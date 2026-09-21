@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fireworks-vibe-cleaner"
-version = "0.3.0"
-description = "Conservative disk cleanup for Codex and Claude Code, with optional Jev advice"
+version = "0.4.0"
+description = "Jev-first disk triage and explicitly approved cleanup for Codex and Claude Code"
 requires-python = ">=3.11"
 license = "MIT"
 authors = [{name = "Fireworks"}]

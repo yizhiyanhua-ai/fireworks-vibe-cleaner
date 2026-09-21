@@ -135,10 +135,19 @@ def advise(items: list[Json], *, enabled: bool = False,
            transport: Callable[[urllib.request.Request, float], Any] | None = None) -> Json:
     if not enabled:
         return {"status": "disabled", "mode": "rules-only", "calls": 0}
+    if not os.getenv("TYPESAFE_API_KEY"):
+        return {"status": "missing-key", "mode": "rules-only", "calls": 0}
+    return request_advice(packet(items), enabled=enabled, transport=transport)
+
+
+def request_advice(request: Json, *, enabled: bool = False,
+                   transport: Callable[[urllib.request.Request, float], Any] | None = None) -> Json:
+    """One bounded typed request; never retries or invokes an executor."""
+    if not enabled:
+        return {"status": "disabled", "mode": "rules-only", "calls": 0}
     key = os.getenv("TYPESAFE_API_KEY")
     if not key:
         return {"status": "missing-key", "mode": "rules-only", "calls": 0}
-    request = packet(items)
     raw = json.dumps(request).encode()
     if len(raw) > 16384:
         raise Refused("Provider payload exceeds 16 KiB cap")

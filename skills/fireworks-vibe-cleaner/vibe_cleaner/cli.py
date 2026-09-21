@@ -11,7 +11,7 @@ import shutil
 import subprocess
 import sys
 
-from . import __version__, backup, engine, history, jev, native_history, sessions
+from . import __version__, backup, engine, history, jev, native_history, sessions, triage
 from .common import Json, Refused, load, write
 from .scan import roots_default, scan
 
@@ -110,6 +110,15 @@ def parser() -> argparse.ArgumentParser:
     s.add_argument("--id", action="append", required=True)
     s.add_argument("--enable-network", action="store_true")
     s.add_argument("--inspect-activity", action="store_true", help="Read-only local lsof checks to refine advice")
+    s.add_argument("--output", type=Path, required=True)
+    s = sub.add_parser("triage", help="Fast batched Jev action/reason suggestions; never creates an executable plan")
+    s.add_argument("--scan", type=Path, required=True)
+    s.add_argument("--id", action="append", help="Explicit candidates; otherwise inspect largest files within limit")
+    s.add_argument("--limit", type=int, default=40, help="Automatic selection limit, 1..100")
+    s.add_argument("--goal", choices=sorted(triage.GOALS), default="balanced")
+    s.add_argument("--enable-network", action="store_true")
+    s.add_argument("--format", choices=["text", "json"], default="text")
+    s.add_argument("--language", choices=["zh", "en"], default="zh")
     s.add_argument("--output", type=Path, required=True)
     return p
 
@@ -214,6 +223,12 @@ def execute(a: argparse.Namespace) -> Json:
         if a.command == "archive-verify":
             return sessions.verify(state, a.run)
         return sessions.restore(state, a.run, quiescent=a.writers_stopped)
+    if a.command == "triage":
+        if a.output.exists() or a.output.is_symlink():
+            raise Refused("Choose a new triage output file before making provider calls")
+        result = triage.run(load(a.scan), a.id, limit=a.limit, goal=a.goal, enabled=a.enable_network)
+        write(a.output, result)
+        return result
     if a.command == "advise":
         inventory = load(a.scan)
         items = [i for i in inventory["items"] if i["id"] in a.id]
@@ -234,7 +249,9 @@ def main() -> int:
             raise Refused("v0.1 supports macOS/Linux only")
         args = parser().parse_args()
         result = execute(args)
-        if args.command == "report" and args.format == "markdown":
+        if args.command == "triage" and args.format == "text":
+            print(triage.render(result, args.language))
+        elif args.command == "report" and args.format == "markdown":
             print("# Space inventory\n\n| Category | Files | Logical bytes | Allocated bytes |\n| --- | ---: | ---: | ---: |")
             for name, row in result["summary"]["categories"].items():
                 print(f"| {name} | {row['files']} | {row['logical_bytes']} | {row['allocated_bytes']} |")

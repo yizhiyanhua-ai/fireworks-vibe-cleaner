@@ -24,7 +24,7 @@ assert "name: fireworks-vibe-cleaner" in (ROOT / "SKILL.md").read_text()
 for path in (ROOT / "docs/experiments").glob("*.json"):
     report = json.loads(path.read_text())
     assert report["real_user_data_modified"] is False
-    if report["data"] != "real-live-jev":
+    if report["data"] not in {"real-live-jev", "real-jev-triage"}:
         assert report["network_calls"] == 0
     if report["data"] == "synthetic-only":
         assert report["passed"] and len(report["experiments"]) == 7
@@ -53,6 +53,16 @@ for path in (ROOT / "docs/experiments").glob("*.json"):
         for run in report["runs"]:
             assert run["status"] == "ok"
             assert all(a["choice"] in {"keep", "review", "backup"} for a in run["answers"].values())
+    elif report["data"] == "real-jev-triage":
+        assert report["transport_mocked"] is False and report["source_hashes_unchanged"]
+        assert report["source_mutations_executed"] is False and report["actual_reclaimed_bytes"] == 0
+        assert report["no_accuracy_claim"] and report["no_cleanup_authorization"]
+        assert report["network_calls"] == sum(r["provider"]["calls"] for r in report["runs"])
+        for run in report["runs"]:
+            assert len(run["decisions"]) == report["source_files"]
+            assert sum(run["action_counts"].values()) == report["source_files"]
+            assert all(d["action"] in {"keep", "review", "backup", "prepare_removal", "prepare_cache_cleanup"}
+                       for d in run["decisions"])
     elif report["data"] == "real-session-preflight":
         assert report["source_mutations_authorized"] is False
         assert report["source_mutations_executed"] is False

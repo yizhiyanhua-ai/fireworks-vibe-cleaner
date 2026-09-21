@@ -8,15 +8,15 @@
 
 需要 Python 3.11+，支持 macOS、Linux。修改源文件或隔离文件还需要 `lsof`；项目字节码检查需要 Git。无 Python 运行时第三方依赖，不启动常驻服务，默认不联网。
 
-安装 v0.3.0 发布版：
+安装 v0.4.0 发布版：
 
 ```sh
-git clone --branch v0.3.0 --depth 1 https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner.git
+git clone --branch v0.4.0 --depth 1 https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner.git
 cd fireworks-vibe-cleaner
 python3 scripts/fireworks-vibe-cleaner.py doctor
 ```
 
-直接运行脚本无需安装 Python 包。下文使用简短的 `fireworks-vibe-cleaner` 命令，可选择创建虚拟环境并执行 `python -m pip install .`；也可将该命令替换为 `python3 scripts/fireworks-vibe-cleaner.py`。开发期间使用本地 checkout，跳过标签克隆步骤。实际发布与实测状态见[版本说明](releases/v0.3.0.md)。
+直接运行脚本无需安装 Python 包。下文使用简短的 `fireworks-vibe-cleaner` 命令，可选择创建虚拟环境并执行 `python -m pip install .`；也可将该命令替换为 `python3 scripts/fireworks-vibe-cleaner.py`。开发期间使用本地 checkout，跳过标签克隆步骤。实际发布与实测状态见[版本说明](releases/v0.4.0.md)。
 
 安装 Skill 时先生成目录，再复制到使用的 harness。以下命令拒绝覆盖已有安装：
 
@@ -96,7 +96,21 @@ fireworks-vibe-cleaner archive-verify --state-dir /absolute/path/to/private-stat
 
 `archive-apply` 重新校验后直接移除所选原件，不把它们移入隔离区，也不删除归档。没有相应用户确认、未停止写入时，不得添加这两个确认参数。关联文件与索引保留不变，历史条目可能无法使用。`archive-restore` 将精确字节恢复到原路径，允许新 inode，不更新索引，也不证明原生续聊成功。保留归档和事务日志；中断后先运行 `archive-verify`，按具体状态处理，不盲目重放删除。删除逻辑字节与卷空闲量实际变化需要分开报告。
 
-## 可选 Jev 建议
+## 推荐：Jev 快速筛选，直接在终端看建议
+
+先完成只读 `scan`，再使用已经授权的 Jev 调用：
+
+```bash
+fireworks-vibe-cleaner triage --scan scan.json --limit 40 --goal balanced --enable-network --format text --language zh --output triage.json
+```
+
+不联网时去掉 `--enable-network`，结果明确标为本地复核。默认只选支持类别中最大的 40 个候选；可以使用 `--limit 1..100`，或重复 `--id CANDIDATE_ID` 覆盖你选定的完整集合（最多 100 项）。目标可选 `balanced`（综合考虑）、`reclaim-space`（优先腾空间）、`preserve-history`（优先保留历史）。
+
+终端直接显示每个文件、动作、理由、事实、备选方式和未知项；JSON 留在本地供复核。`backup` 保留原件，`prepare_removal` 只建议准备“验证备份后移除”的方案，`prepare_cache_cleanup` 只建议准备日志/缓存隔离与另行批准的销毁方案。这一步不生成可执行计划、没有回收空间。Jev 原始建议和低 confidence 转人工复核均留有记录。
+
+范围确定后再做完整哈希和保护/活跃检查；在聊天中显示完整清单、每项方法及原因、影响、备份位置、计划 hash，经人工明确确认才进入后面的执行命令。只给 MD 链接不够。[能力依据、调用上限与限制](jev.md)。
+
+## 单次 Jev 建议（兼容命令）
 
 通过密钥管理器或进程环境提供 `TYPESAFE_API_KEY`，不要写入命令历史或报告。使用以下参数显式启用联网：
 

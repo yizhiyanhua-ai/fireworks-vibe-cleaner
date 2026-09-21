@@ -42,6 +42,11 @@ def main() -> None:
             inv = base / f"{harness}-scan.json"
             run("scan", "--root", f"codex={root}", "--output", str(inv))
             item = json.loads(inv.read_text())["items"][0]
+            advice = run("triage", "--scan", str(inv), "--id", item["id"], "--format", "json",
+                         "--output", str(base / f"{harness}-triage.json"))
+            assert advice["provider"]["calls"] == 0 and advice["executable"] is False
+            assert advice["decisions"][0]["source"] == "local-fallback"
+            assert hashlib.sha256(log.read_bytes()).digest() == hashlib.sha256(content).digest()
             plan_path = base / f"{harness}-plan.json"
             state = base / f"{harness}-state"
             plan = run("plan", "--scan", str(inv), "--id", item["id"], "--state-dir", str(state),
