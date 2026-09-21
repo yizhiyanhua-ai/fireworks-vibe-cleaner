@@ -1,0 +1,169 @@
+"""CLI entry point; network and mutation are always explicit."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+from pathlib import Path
+import platform
+import shutil
+import subprocess
+import sys
+
+from . import __version__, backup, engine, jev
+from .common import Json, Refused, load, write
+from .scan import roots_default, scan
+
+
+def parser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(prog="fireworks-vibe-cleaner", description="Inspect, plan, quarantine, verify. Offline by default.")
+    p.add_argument("--version", action="version", version=__version__)
+    sub = p.add_subparsers(dest="command", required=True)
+    sub.add_parser("doctor", help="Read-only capability report; no network")
+    s = sub.add_parser("scan", help="Read-only inventory; no transcript contents read")
+    s.add_argument("--root", action="append", help="Explicit kind=path (codex, claude, project)")
+    s.add_argument("--min-age-days", type=int, default=30)
+    s.add_argument("--max-files", type=int, default=200000)
+    s.add_argument("--keep", action="append", default=[])
+    s.add_argument("--output", type=Path, required=True)
+    s = sub.add_parser("report", help="Show inventory summary and optional growth")
+    s.add_argument("--scan", type=Path, required=True)
+    s.add_argument("--previous", type=Path)
+    s.add_argument("--format", choices=["json", "markdown"], default="json")
+    s = sub.add_parser("plan", help="Hash selected eligible files into a reviewable plan")
+    s.add_argument("--scan", type=Path, required=True)
+    s.add_argument("--id", action="append", required=True)
+    s.add_argument("--state-dir", type=Path, required=True)
+    s.add_argument("--max-bytes", type=int, required=True)
+    s.add_argument("--output", type=Path, required=True)
+    s = sub.add_parser("apply", help="Quarantine exactly an approved plan; frees zero bytes")
+    s.add_argument("--plan", type=Path, required=True)
+    s.add_argument("--approve", required=True, help="Exact reviewed plan hash")
+    s.add_argument("--writers-stopped", action="store_true")
+    s.add_argument("--state-cap-bytes", type=int, default=1024**3)
+    for name in ("verify", "restore", "purge"):
+        s = sub.add_parser(name)
+        s.add_argument("--state-dir", type=Path, required=True)
+        s.add_argument("--run", required=True)
+        if name != "verify":
+            s.add_argument("--writers-stopped", action="store_true")
+        if name == "purge":
+            s.add_argument("--approve", required=True, help="purge:<run> authorizes permanent deletion")
+    s = sub.add_parser("backup", help="Private same-volume snapshot; retains all source files")
+    s.add_argument("--scan", type=Path, required=True)
+    s.add_argument("--id", action="append", required=True)
+    s.add_argument("--output", type=Path, required=True)
+    s.add_argument("--max-bytes", type=int, required=True)
+    s = sub.add_parser("extract", help="Restore backup bytes into a new directory, never live harness state")
+    s.add_argument("--archive", type=Path, required=True)
+    s.add_argument("--destination", type=Path, required=True)
+    s.add_argument("--max-bytes", type=int, default=1024**3)
+    s = sub.add_parser("advise", help="Optional one-call Jev review (no deletion authority)")
+    s.add_argument("--scan", type=Path, required=True)
+    s.add_argument("--id", action="append", required=True)
+    s.add_argument("--enable-network", action="store_true")
+    s.add_argument("--output", type=Path, required=True)
+    return p
+
+
+def doctor() -> Json:
+    versions = {}
+    for name in ("codex", "claude"):
+        try:
+            result = subprocess.run([name, "--version"], capture_output=True, text=True, timeout=5)
+            versions[name] = result.stdout.strip()[:120] if result.returncode == 0 else "unavailable"
+        except (OSError, subprocess.TimeoutExpired):
+            versions[name] = "unavailable"
+    return {"version": __version__, "python": platform.python_version(), "platform": sys.platform,
+            "harness_versions": versions, "lsof_available": bool(shutil.which("lsof")),
+            "jev_key_present": bool(os.getenv("TYPESAFE_API_KEY")), "network_tested": False,
+            "session_deletion": "disabled", "cross_volume_moves": "disabled",
+            "roots": [{"kind": kind, "path": str(path.resolve()), "exists": path.exists()}
+                      for kind, path in roots_default()]}
+
+
+def execute(a: argparse.Namespace) -> Json:
+    if a.command == "doctor":
+        return doctor()
+    if a.command == "scan":
+        roots = []
+        if a.root:
+            for value in a.root:
+                kind, sep, path = value.partition("=")
+                if not sep:
+                    raise Refused("Use --root kind=path")
+                roots.append((kind, Path(path)))
+        else:
+            roots = [(kind, path) for kind, path in roots_default() if path.exists()]
+        result = scan(roots, min_age_days=a.min_age_days, max_files=a.max_files, keep=a.keep)
+        write(a.output, result)
+        return {"output": str(a.output), "complete": result["complete"], **result["summary"]}
+    if a.command == "report":
+        current = load(a.scan)
+        result = {"summary": current["summary"], "complete": current["complete"],
+                  "errors": current["errors"], "eligible": [i for i in current["items"] if i["eligible"]]}
+        if a.previous:
+            before = load(a.previous)
+            if before["roots"] != current["roots"] or not before["complete"] or not current["complete"]:
+                raise Refused("Growth comparison requires complete scans of identical roots")
+            if current["created_at"] <= before["created_at"]:
+                raise Refused("Previous scan must be older")
+            result["logical_growth_bytes"] = (sum(i["identity"]["size"] for i in current["items"]) -
+                                               sum(i["identity"]["size"] for i in before["items"]))
+        return result
+    if a.command == "plan":
+        result = engine.make_plan(load(a.scan), a.id, a.state_dir, max_bytes=a.max_bytes)
+        write(a.output, result)
+        # The approval hash is shown alongside the entire selected scope, never alone.
+        return result
+    if a.command == "apply":
+        return engine.apply(load(a.plan), a.approve, quiescent=a.writers_stopped, state_cap=a.state_cap_bytes)
+    if a.command in {"verify", "restore", "purge"}:
+        state = a.state_dir.expanduser().absolute()
+        if a.command == "verify":
+            return engine.verify(state, a.run)
+        if a.command == "restore":
+            return engine.restore(state, a.run, quiescent=a.writers_stopped)
+        return engine.purge(state, a.run, a.approve, quiescent=a.writers_stopped)
+    if a.command == "backup":
+        return backup.backup(load(a.scan), a.id, a.output, max_bytes=a.max_bytes)
+    if a.command == "extract":
+        return backup.extract(a.archive, a.destination, max_bytes=a.max_bytes)
+    if a.command == "advise":
+        inventory = load(a.scan)
+        items = [i for i in inventory["items"] if i["id"] in a.id]
+        if len(items) != len(a.id):
+            raise Refused("Unknown or duplicate ID")
+        result = jev.advise(items, enabled=a.enable_network)
+        write(a.output, result)
+        return result
+    raise Refused("Unknown command")
+
+
+def main() -> int:
+    try:
+        if os.name != "posix":
+            raise Refused("v0.1 supports macOS/Linux only")
+        args = parser().parse_args()
+        result = execute(args)
+        if args.command == "report" and args.format == "markdown":
+            print("# Space inventory\n\n| Category | Files | Logical bytes | Allocated bytes |\n| --- | ---: | ---: | ---: |")
+            for name, row in result["summary"]["categories"].items():
+                print(f"| {name} | {row['files']} | {row['logical_bytes']} | {row['allocated_bytes']} |")
+            print(f"\nComplete: {result['complete']}. Eligible is preliminary, not verified reclaimable space.")
+            print(f"\nExcluded boundaries or errors: {len(result['errors'])}.")
+            if "logical_growth_bytes" in result:
+                print(f"\nLogical growth: {result['logical_growth_bytes']} bytes.")
+        else:
+            print(json.dumps(result, indent=2, ensure_ascii=False, allow_nan=False))
+        return 0 if result.get("ok", True) else 3
+    except (Refused, OSError, ValueError, KeyError, TypeError, subprocess.TimeoutExpired) as exc:
+        # Never print provider request/response payloads or auth headers on errors.
+        print(json.dumps({"error": type(exc).__name__, "message": str(exc) if isinstance(exc, Refused)
+                          else "Operation failed; check paths, permissions, input schema and dependencies."}), file=sys.stderr)
+        return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

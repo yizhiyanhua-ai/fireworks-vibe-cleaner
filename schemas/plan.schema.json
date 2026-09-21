@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Fireworks Vibe Cleaner review plan v1",
+  "type": "object",
+  "required": ["schema", "policy", "action", "hash", "created_at", "expires_at", "state_dir", "max_bytes", "min_age_days", "items"],
+  "properties": {
+    "schema": {"const": 1},
+    "policy": {"const": "conservative-files-v1"},
+    "action": {"const": "quarantine"},
+    "hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "created_at": {"type": "number"},
+    "expires_at": {"type": "number"},
+    "state_dir": {"type": "string"},
+    "max_bytes": {"type": "integer", "minimum": 1},
+    "min_age_days": {"type": "integer", "minimum": 1},
+    "items": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["id", "root", "relative", "identity", "sha256", "adapter", "category", "eligible"]}}
+  }
+}

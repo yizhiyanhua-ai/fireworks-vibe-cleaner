@@ -1,0 +1,35 @@
+name: Release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.11'
+      - run: sudo apt-get update && sudo apt-get install -y lsof
+      - run: python -m pip install -r requirements-dev.txt
+      - name: Verify tag and complete release checks
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          test "$RELEASE_TAG" = "v$(python -c 'from vibe_cleaner import __version__; print(__version__)')"
+          ruff check .
+          mypy vibe_cleaner
+          python -m unittest discover -s tests -v
+          python tools/check_project.py
+          python tools/build_skill.py --check --release
+          python tools/install_canary.py
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: gh release create "$RELEASE_TAG" dist/* --verify-tag --title "Fireworks Vibe Cleaner $RELEASE_TAG" --notes-file "docs/releases/$RELEASE_TAG.md"

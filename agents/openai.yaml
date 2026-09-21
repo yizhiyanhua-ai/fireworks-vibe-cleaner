@@ -1,0 +1,4 @@
+interface:
+  display_name: "Fireworks Vibe Cleaner"
+  short_description: "Inspect and safely plan harness disk cleanup"
+  default_prompt: "Use $fireworks-vibe-cleaner to inspect Codex and Claude Code disk usage, explain protected objects, and prepare a bounded reviewable cleanup plan. Obtain approval for the exact plan before applying; quarantine frees zero bytes, and purge needs separate approval."

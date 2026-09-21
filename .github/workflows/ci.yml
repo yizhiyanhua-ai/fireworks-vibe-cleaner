@@ -1,0 +1,41 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  quality:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python: ['3.11', '3.14']
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install test dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Install lsof on Linux
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y lsof
+      - run: ruff check .
+      - run: mypy vibe_cleaner
+      - run: python -m unittest discover -s tests -v
+      - run: python tools/check_project.py
+      - run: python tools/build_skill.py --check
+      - run: python tools/install_canary.py
+      - run: python tools/build_skill.py --check --release
+      - name: Verify wheel installation in a fresh environment
+        run: |
+          python -m venv "$RUNNER_TEMP/vibe-install"
+          "$RUNNER_TEMP/vibe-install/bin/python" -m pip install .
+          "$RUNNER_TEMP/vibe-install/bin/fireworks-vibe-cleaner" --version

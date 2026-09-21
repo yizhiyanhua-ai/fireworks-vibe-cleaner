@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fireworks-vibe-cleaner"
+version = "0.1.0"
+description = "Conservative disk cleanup for Codex and Claude Code, with optional Jev advice"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [{name = "Fireworks"}]
+readme = "README.md"
+dependencies = []
+
+[project.scripts]
+fireworks-vibe-cleaner = "vibe_cleaner.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["vibe_cleaner*"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+exclude = ["skills", "artifacts", "dist"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]
+
+[tool.mypy]
+python_version = "3.11"
+check_untyped_defs = true
+files = ["vibe_cleaner"]
