@@ -1,0 +1,129 @@
+{
+  "schema": 1,
+  "data": "real-local",
+  "date": "2026-09-21",
+  "environment": {
+    "os": "Darwin",
+    "release": "26.5.1",
+    "architecture": "arm64",
+    "python": "3.14.6"
+  },
+  "source_snapshot_complete": false,
+  "excluded_boundaries": {
+    "skipped_boundary_or_dependency": 225
+  },
+  "inventory_before_fix": {
+    "files": 49064,
+    "categories": {
+      "protected": {
+        "files": 42330,
+        "logical_bytes": 5823629817,
+        "allocated_bytes": 5932716032
+      },
+      "asset": {
+        "files": 238,
+        "logical_bytes": 241144700,
+        "allocated_bytes": 241590272
+      },
+      "session": {
+        "files": 2615,
+        "logical_bytes": 15038397937,
+        "allocated_bytes": 15057453056
+      },
+      "log": {
+        "files": 13,
+        "logical_bytes": 637121,
+        "allocated_bytes": 667648
+      },
+      "checkpoint": {
+        "files": 3868,
+        "logical_bytes": 61660864,
+        "allocated_bytes": 69664768
+      }
+    },
+    "eligible_files": 8,
+    "eligible_allocated_bytes": 196608,
+    "note": "Eligible is preliminary; not authorization or verified reclaimable space."
+  },
+  "inventory_after_fix_same_snapshot": {
+    "files": 49064,
+    "categories": {
+      "protected": {
+        "files": 42340,
+        "logical_bytes": 5824265816,
+        "allocated_bytes": 5933371392
+      },
+      "asset": {
+        "files": 238,
+        "logical_bytes": 241144700,
+        "allocated_bytes": 241590272
+      },
+      "session": {
+        "files": 2615,
+        "logical_bytes": 15038397937,
+        "allocated_bytes": 15057453056
+      },
+      "log": {
+        "files": 3,
+        "logical_bytes": 1122,
+        "allocated_bytes": 12288
+      },
+      "checkpoint": {
+        "files": 3868,
+        "logical_bytes": 61660864,
+        "allocated_bytes": 69664768
+      }
+    },
+    "eligible_files": 0,
+    "eligible_allocated_bytes": 0,
+    "note": "Eligible is preliminary; not authorization or verified reclaimable space."
+  },
+  "custom_log_candidates_rejected": 8,
+  "custom_log_allocated_bytes_protected": 196608,
+  "real_user_data_modified": false,
+  "network_calls": 0,
+  "cleanup_bytes_reclaimed": 0,
+  "backups": [
+    {
+      "adapter": "codex",
+      "status": "bytes-verified",
+      "files": 2,
+      "source_bytes_before": 126384858,
+      "source_bytes_after": 126384858,
+      "archive_bytes": 37856051,
+      "archive_reduction_percent": 70.05,
+      "retained_artifact_bytes": 37857810,
+      "backup_elapsed_ms": 1978,
+      "source_hashes_unchanged": true,
+      "extracted_hashes_match": true,
+      "source_bytes_deleted": 0,
+      "cleanup_bytes_reclaimed": 0,
+      "observed_volume_free_delta_bytes": -38461440,
+      "harness_resume_verified": false
+    },
+    {
+      "adapter": "claude",
+      "status": "bytes-verified",
+      "files": 2,
+      "source_bytes_before": 98252538,
+      "source_bytes_after": 98252538,
+      "archive_bytes": 21852674,
+      "archive_reduction_percent": 77.76,
+      "retained_artifact_bytes": 21854520,
+      "backup_elapsed_ms": 1214,
+      "source_hashes_unchanged": true,
+      "extracted_hashes_match": true,
+      "source_bytes_deleted": 0,
+      "cleanup_bytes_reclaimed": 0,
+      "observed_volume_free_delta_bytes": -21991424,
+      "harness_resume_verified": false
+    }
+  ],
+  "notes": [
+    "Real existing files; no fixtures, no mocked transport, no source deletion.",
+    "Archives and private manifests retained; temporary extracted copies removed.",
+    "Archive reduction is compression only, not recovered disk space.",
+    "Volume free deltas include concurrent unrelated writes and are not cleanup gains.",
+    "Before/after policy comparison uses the identical frozen real inventory."
+  ]
+}

@@ -14,7 +14,7 @@ sys.path.insert(0, str(ROOT))
 from vibe_cleaner import __version__  # noqa: E402
 
 FILES = ["SKILL.md", "README.md", "README.zh.md", "LICENSE", "CHANGELOG.md", "SECURITY.md", "CONTRIBUTING.md",
-         "tools/local_experiments.py"]
+         "tools/local_experiments.py", "tools/real_validation.py"]
 DIRS = ["vibe_cleaner", "scripts", "agents", "schemas", "docs", "assets"]
 
 

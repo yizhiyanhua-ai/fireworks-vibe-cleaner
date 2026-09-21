@@ -18,7 +18,7 @@ Use the bundled CLI as the sole cleanup implementation. Resolve this Skill's dir
 
 ## Hard boundaries
 
-- Only recognized old regular logs and Git-ignored, untracked Python bytecode with tracked source can enter cleanup. Never expand scope via shell deletion, directory-name guesses or model output.
+- Only recognized old regular logs and Git-ignored, untracked Python bytecode with tracked source can enter cleanup. Codex allows only `log/codex-tui.log` and `logs/codex-tui.log`; custom-service logs are protected. Never expand scope via shell deletion, directory-name guesses or model output.
 - Sessions, checkpoints, assets, worktrees, source, credentials, databases, memories and unknown objects are not cleanup targets. Worktrees require the harness/Git lifecycle outside this Skill.
 - Same-volume quarantine releases zero bytes. Purge is irreversible. Report observed volume free-space change separately from deleted logical size; neither is a universal reclaim guarantee.
 - Backup/extract check selected bytes only, retain source files and do not prove harness resume. Keep ZIP and manifest together, local and private. Cross-volume backup, encryption and session deletion are unavailable.

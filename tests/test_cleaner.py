@@ -23,7 +23,7 @@ class CleanerTests(unittest.TestCase):
         self.root = self.base / "codex"
         self.root.mkdir()
         self.state = self.base / "state"
-        self.log = self.root / "logs" / "old.log"
+        self.log = self.root / "logs" / "codex-tui.log"
         self.log.parent.mkdir()
         self.log.write_bytes(b"synthetic diagnostic\n" * 100)
         old = time.time() - 60 * 86400
@@ -72,6 +72,19 @@ class CleanerTests(unittest.TestCase):
         os.utime(self.log, None)
         self.assertEqual(self.inventory()["summary"]["eligible_files"], 0)
 
+    def test_custom_service_logs_cannot_enter_cleanup(self):
+        for relative in ("logs/custom-service.err.log", "log/unrelated.log", "logs/nested/codex-tui.log"):
+            path = self.root / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("private service diagnostic")
+            os.utime(path, (0, 0))
+        inv = self.inventory()
+        self.assertEqual(inv["summary"]["eligible_files"], 1)
+        for item in inv["items"]:
+            if item["relative"] != "logs/codex-tui.log":
+                self.assertEqual(item["category"], "protected")
+                with self.assertRaises(Refused):
+                    engine.make_plan(inv, [item["id"]], self.state, max_bytes=100000)
     def test_plan_tamper_expiry_cap_and_wrong_approval(self):
         plan = self.plan()
         with self.assertRaises(Refused):
@@ -104,7 +117,7 @@ class CleanerTests(unittest.TestCase):
         self.log.parent.symlink_to(moved, target_is_directory=True)
         with self.assertRaises(OSError):
             engine.apply(plan, plan["hash"], quiescent=True)
-        self.assertTrue((moved / "old.log").exists())
+        self.assertTrue((moved / "codex-tui.log").exists())
 
     def test_quarantine_restore_and_replay(self):
         original = self.log.read_bytes()
@@ -174,7 +187,7 @@ class CleanerTests(unittest.TestCase):
         real_link = os.link
         def crash(src, dst, **kwargs):
             real_link(src, dst, **kwargs)
-            if isinstance(dst, str) and dst == "old.log":
+            if isinstance(dst, str) and dst == "codex-tui.log":
                 raise OSError("injected after restore link")
         with patch("vibe_cleaner.engine.os.link", side_effect=crash):
             with self.assertRaises(OSError):
@@ -310,7 +323,7 @@ class CleanerTests(unittest.TestCase):
         def transport(request, timeout):
             raw = request.data.decode()
             self.assertNotIn(str(self.root), raw)
-            self.assertNotIn("old.log", raw)
+            self.assertNotIn("codex-tui.log", raw)
             self.assertNotIn("synthetic diagnostic", raw)
             return {"model": "jev-test", "answers": {"c0": {"type": "choice", "choice": "review",
                     "probabilities": {"keep": 0.1, "review": 0.9, "backup": 0.0}, "confidence": 0.7}},

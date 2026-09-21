@@ -80,7 +80,7 @@ def main() -> None:
 
         root = base / "mixed-fixture"
         rng = random.Random(20260921)
-        logs = [fixture(root, f"logs/old-{n}.log", rng.randbytes(4 * 1024**2)) for n in range(2)]
+        logs = [fixture(root, f"{directory}/codex-tui.log", rng.randbytes(4 * 1024**2)) for directory in ("log", "logs")]
         protected = [
             fixture(root, "sessions/a.jsonl", b'{"synthetic": true}\n'),
             fixture(root, "archived_sessions/b.jsonl", b'{"synthetic": true}\n'),
@@ -128,7 +128,7 @@ def main() -> None:
                      "measurement_note": "Volume delta includes filesystem accounting and unrelated writes."})
 
         changed_root = base / "changed-fixture"
-        changed = fixture(changed_root, "logs/old.log", b"old synthetic log")
+        changed = fixture(changed_root, "logs/codex-tui.log", b"old synthetic log")
         p, out = plan(changed_root, "changed", base / "changed-state")
         changed.write_bytes(b"new synthetic content after plan")
         result = run("apply", "--plan", str(out), "--approve", p["hash"], "--writers-stopped", expected=2)
@@ -137,7 +137,7 @@ def main() -> None:
                      "source_retained": True, "error_class": result["error"]})
 
         conflict_root, conflict_state = base / "conflict-fixture", base / "conflict-state"
-        conflict = fixture(conflict_root, "logs/old.log", b"old synthetic log")
+        conflict = fixture(conflict_root, "logs/codex-tui.log", b"old synthetic log")
         old_hash = fingerprint(conflict)
         p, out = plan(conflict_root, "conflict", conflict_state)
         apply(p, out)

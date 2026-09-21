@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.1 — 2026-09-21
+
+- Real local validation found custom-service logs incorrectly eligible under Codex log directories. Restrict eligibility to the exact `codex-tui.log` basename directly under `log/` or `logs/`; existing plans are rechecked before execution.
+- Add private real-session backup validation and publish sanitized real measurements, including zero bytes reclaimed. Separate synthetic regression evidence from actual effectiveness results.
+
 ## 0.1.0 — 2026-09-21
 
 - Add a Python CLI and Codex/Claude Code Skill for bounded storage inspection.

@@ -27,7 +27,7 @@ def classify(root: Path, rel: str, kind: str) -> tuple[str, str]:
     if kind == "codex":
         if p.parts[0] in {"sessions", "archived_sessions"} and p.suffix == ".jsonl":
             return "session", "transcript backup only; resume dependencies unverified"
-        if p.parts[0] in {"log", "logs"} and p.suffix == ".log":
+        if len(p.parts) == 2 and p.parts[0] in {"log", "logs"} and p.name == "codex-tui.log":
             return "log", "known harness diagnostic log"
         if p.parts[0] == "worktrees":
             return "worktree", "use harness/Git lifecycle; never remove automatically"

@@ -35,7 +35,7 @@ def main() -> None:
             run("doctor")
             root = base / (harness[1:] + "-fixture")
             (root / "logs").mkdir(parents=True)
-            log = root / "logs/old.log"
+            log = root / "logs/codex-tui.log"
             content = os.urandom(2 * 1024 * 1024)
             log.write_bytes(content)
             os.utime(log, (time.time() - 86400 * 60,) * 2)
