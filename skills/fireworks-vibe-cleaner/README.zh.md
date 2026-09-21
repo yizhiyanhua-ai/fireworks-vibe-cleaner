@@ -24,7 +24,7 @@
 
 需要 Python 3.11+，支持 macOS、Linux。修改源文件或隔离文件还需要 `lsof`；项目字节码检查需要 Git。无 Python 运行时第三方依赖，不启动常驻服务，默认不联网。
 
-`v0.1.0` 发布后，可从固定标签安装：
+从固定标签安装：
 
 ```sh
 git clone --branch v0.1.0 --depth 1 https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner.git
@@ -112,4 +112,4 @@ ruff check .
 mypy vibe_cleaner
 ```
 
-CI 设计覆盖 Linux/macOS、确定性安全与恢复测试、打包及干净安装，不需要模型凭据。实际证据以 workflow 与[版本说明](docs/releases/v0.1.0.md)为准，配置了 CI 不代表运行已通过。开发说明见 [CONTRIBUTING.md](CONTRIBUTING.md)，安全边界见 [SECURITY.md](SECURITY.md)。MIT © 2026 Fireworks。
+CI 已通过 Linux/macOS × Python 3.11/3.14 四组验证，覆盖安全与恢复测试、打包及干净安装，不需要模型凭据。实际证据以 workflow 与[版本说明](docs/releases/v0.1.0.md)为准，配置了 CI 不代表运行已通过。开发说明见 [CONTRIBUTING.md](CONTRIBUTING.md)，安全边界见 [SECURITY.md](SECURITY.md)。MIT © 2026 Fireworks。

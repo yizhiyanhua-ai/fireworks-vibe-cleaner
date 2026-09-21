@@ -24,7 +24,7 @@ Default retention is 30 days. Scan eligibility is preliminary, not permission to
 
 Requires Python 3.11+, macOS or Linux. Mutation of source/quarantine files additionally requires `lsof`; project-bytecode validation requires Git. No runtime Python dependencies, daemon, or default network requests.
 
-After `v0.1.0` is published, install the tagged source:
+Install the tagged source:
 
 ```sh
 git clone --branch v0.1.0 --depth 1 https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner.git
@@ -112,4 +112,4 @@ ruff check .
 mypy vibe_cleaner
 ```
 
-CI is intended to cover Linux/macOS, deterministic safety and recovery tests, packaging and clean installation without model credentials. See the workflow files and [release notes](docs/releases/v0.1.0.md) for actual evidence; a configured workflow is not a passing run. See [CONTRIBUTING.md](CONTRIBUTING.md) for development and [SECURITY.md](SECURITY.md) for the threat boundary. MIT © 2026 Fireworks.
+CI passed on Linux/macOS with Python 3.11/3.14, covering safety and recovery tests, packaging and clean installation without model credentials. See the workflow files and [release notes](docs/releases/v0.1.0.md) for actual evidence; a configured workflow is not a passing run. See [CONTRIBUTING.md](CONTRIBUTING.md) for development and [SECURITY.md](SECURITY.md) for the threat boundary. MIT © 2026 Fireworks.
