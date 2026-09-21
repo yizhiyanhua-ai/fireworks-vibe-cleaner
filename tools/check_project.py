@@ -16,7 +16,28 @@ for name in ("README.md", "README.zh.md"):
     for link in re.findall(r"\]\(([^)]+)\)", content):
         if not link.startswith(("https:", "http:", "#")):
             assert (ROOT / link.split("#")[0]).exists(), link
+    for src in re.findall(r'<img[^>]+src="([^"]+)"', content):
+        assert (ROOT / src).is_file(), src
 for path in (ROOT / "schemas").glob("*.json"):
     json.loads(path.read_text())
 assert "name: fireworks-vibe-cleaner" in (ROOT / "SKILL.md").read_text()
+for path in (ROOT / "docs/experiments").glob("*.json"):
+    report = json.loads(path.read_text())
+    assert report["data"] == "synthetic-only"
+    assert report["real_user_data_modified"] is False
+    assert report["network_calls"] == 0
+    assert report["passed"] and len(report["experiments"]) == 7
+    assert all(row["passed"] for row in report["experiments"])
+    forbidden_keys = {"path", "root", "relative", "username", "hostname", "session_id", "api_key", "token"}
+    def inspect(value):
+        if isinstance(value, dict):
+            assert not (set(value) & forbidden_keys), "Private field in public evidence"
+            for child in value.values():
+                inspect(child)
+        elif isinstance(value, list):
+            for child in value:
+                inspect(child)
+        elif isinstance(value, str):
+            assert not any(prefix in value for prefix in ["/Users/", "/home/", "/Volumes/", "Bearer "])
+    inspect(report)
 print(f"Version, documentation links, schemas and Skill identity verified: {version}")

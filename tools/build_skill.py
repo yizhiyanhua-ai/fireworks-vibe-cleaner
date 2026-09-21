@@ -13,8 +13,9 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from vibe_cleaner import __version__  # noqa: E402
 
-FILES = ["SKILL.md", "README.md", "README.zh.md", "LICENSE", "CHANGELOG.md", "SECURITY.md", "CONTRIBUTING.md"]
-DIRS = ["vibe_cleaner", "scripts", "agents", "schemas", "docs"]
+FILES = ["SKILL.md", "README.md", "README.zh.md", "LICENSE", "CHANGELOG.md", "SECURITY.md", "CONTRIBUTING.md",
+         "tools/local_experiments.py"]
+DIRS = ["vibe_cleaner", "scripts", "agents", "schemas", "docs", "assets"]
 
 
 def sources() -> list[Path]:

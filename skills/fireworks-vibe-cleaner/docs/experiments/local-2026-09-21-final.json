@@ -1,0 +1,76 @@
+{
+  "schema": 1,
+  "date_utc": "2026-09-21",
+  "tool_version": "0.1.0",
+  "environment": {
+    "os": "Darwin",
+    "os_version": "26.5.1",
+    "python": "3.14.6",
+    "architecture": "arm64"
+  },
+  "data": "synthetic-only",
+  "real_user_data_modified": false,
+  "network_calls": 0,
+  "temporary_fixture_removed": true,
+  "passed": true,
+  "experiments": [
+    {
+      "id": "mixed-inventory",
+      "passed": true,
+      "fixture_files": 10,
+      "eligible_files": 2,
+      "protected_files": 8,
+      "protected_hashes_unchanged": true
+    },
+    {
+      "id": "quarantine-restore",
+      "passed": true,
+      "files": 2,
+      "logical_bytes": 8388608,
+      "quarantine_expected_reclaimed_bytes": 0,
+      "quarantine_measurement": "Same-volume move semantics, not a measured zero free-space delta.",
+      "restored_hashes_match": true
+    },
+    {
+      "id": "approved-purge",
+      "passed": true,
+      "files": 2,
+      "deleted_logical_bytes": 8388608,
+      "observed_volume_free_delta_bytes": 5976064,
+      "protected_files_unchanged": 8,
+      "measurement_note": "Volume delta includes filesystem accounting and unrelated writes."
+    },
+    {
+      "id": "changed-plan-refusal",
+      "passed": true,
+      "exit_code": 2,
+      "source_retained": true,
+      "error_class": "Refused"
+    },
+    {
+      "id": "restore-conflict",
+      "passed": true,
+      "exit_code": 2,
+      "new_source_preserved": true,
+      "quarantined_original_preserved": true
+    },
+    {
+      "id": "session-byte-backup",
+      "passed": true,
+      "files": 1,
+      "original_retained": true,
+      "extracted_hash_match": true,
+      "harness_resume_verified": false
+    },
+    {
+      "id": "jev-offline-failure",
+      "passed": true,
+      "simulated_http_status": 503,
+      "transport_calls": 1,
+      "actual_network_calls": 0,
+      "fallback": "rules-only",
+      "private_paths_sent": false,
+      "live_provider_verified": false
+    }
+  ]
+}

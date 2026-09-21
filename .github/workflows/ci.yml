@@ -33,6 +33,14 @@ jobs:
       - run: python tools/check_project.py
       - run: python tools/build_skill.py --check
       - run: python tools/install_canary.py
+      - name: Run synthetic local experiments
+        run: python tools/local_experiments.py --output "$RUNNER_TEMP/vibe-experiments.json"
+      - name: Save sanitized experiment results
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: experiments-${{ matrix.os }}-python-${{ matrix.python }}
+          path: ${{ runner.temp }}/vibe-experiments.json
+          retention-days: 14
       - run: python tools/build_skill.py --check --release
       - name: Verify wheel installation in a fresh environment
         run: |

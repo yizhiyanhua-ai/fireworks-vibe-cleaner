@@ -1,5 +1,7 @@
 # fireworks-vibe-cleaner
 
+<p align="center"><img src="assets/logo-spark-sweep.png" width="192" height="192" alt="Fireworks Vibe Cleaner — Spark Sweep logo"></p>
+
 [English](README.md) | [简体中文](README.zh.md) · [Compatibility](docs/compatibility.md) · [Security](SECURITY.md)
 
 [![CI](https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner/actions/workflows/ci.yml/badge.svg)](https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner/actions/workflows/ci.yml) [![MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -101,6 +103,34 @@ fireworks-vibe-cleaner advise --scan scan.json --id CANDIDATE_ID --enable-networ
 每次执行最多调用一次 TypeSafe API，处理 1–20 个候选。仅发送临时候选编号、类别、大小/年龄区间、规则资格以及“活跃状态未知”；不发送路径、文件名、原始候选 ID、会话正文、源码或自由文本原因。请求上限 16 KiB、响应上限 64 KiB、网络超时 8 秒；禁止重定向，不自动重试。
 
 Jev 仅可建议 `keep`、`review`、`backup`，无法批准删除、修改计划或绕过保护规则。置信度不代表安全删除概率。缺少 Key、HTTP 错误或非法响应均退回纯规则模式。调用可能产生服务商费用；一次调用上限不等于金额预算保证。线上接口与准确性仍待验证；核心清理不依赖 Jev 可用性。
+
+## 本地实验
+
+运行环境：**2026-09-21 · macOS 26.5.1 · arm64 · Python 3.14.6**。全部使用独立临时目录中的合成文件，7 组实验通过，未修改真实用户文件，也未发送模型 API 请求。这些是本地实测，与 CI 矩阵结果分开记录。
+
+| 实验 | 测试条件 | 实际结果 | 结论 |
+| --- | --- | --- | --- |
+| 扫描与保护 | 10 个文件：2 份旧日志、8 个受保护/近期/手动保留对象 | 仅识别出 2 个清理候选；8 个保留对象哈希均未变化 | 通过 |
+| 隔离与恢复 | 2 个文件，共 8 MiB | 8 MiB 全部保留在同卷隔离区；恢复后两份内容哈希一致 | 通过 |
+| 批准后永久清理 | 为同一批 8 MiB 文件重新生成并批准计划 | 删除逻辑字节 8,388,608；卷空闲量实测增加 **4,157,440 字节（3.965 MiB）**；8 个保留对象未变化 | 通过 |
+| 计划后文件变化 | 执行前修改候选文件 | 返回码 2，拒绝执行并保留变化后的源文件 | 通过 |
+| 恢复冲突 | 原路径已有新内容 | 返回码 2，新内容与隔离区原件均保留 | 通过 |
+| 会话字节备份 | 复制并解出一份合成会话记录 | 原文件保留，解出内容哈希一致；**未测试 harness 续接** | 通过 |
+| Jev 服务失败 | 离线传输模拟 HTTP 503 | 1 次模拟调用、0 次联网，退回规则模式；请求不含私人路径 | 通过 |
+
+增加 Python 优化模式保护后，第二次运行的 7 组实验也全部通过：删除逻辑字节 8,388,608，卷空闲量观测差值为 **+5,976,064 字节（+5.699 MiB）**。两次记录均保留，未挑选较高的回收值。隔离行验证的是字节保留，没有声称实测磁盘空闲量恰好变化 0。
+
+卷空闲量差值是观测值，不代表删除的 8 MiB 全部立即可用；文件系统记账与其他进程写入会影响它。备份实验验证的是选定文件的字节，Jev 实验验证的是故障处理，分别不等于会话可续接、真实推理准确性已验证。
+
+[首次脱敏记录](docs/experiments/local-2026-09-21.json) · [最终脱敏记录](docs/experiments/local-2026-09-21-final.json) · [复现实验脚本](tools/local_experiments.py)。公开结果仅保留实验标签、系统/运行时版本、计数、字节数和布尔值，不含用户名、绝对路径、会话 ID、凭据、会话正文或源码内容。
+
+```sh
+python3 tools/local_experiments.py --output artifacts/local-experiments.json
+```
+
+实验脚本和 Logo 随当前 `main` 分支提供；初始 `v0.1.0` 标签早于此次文档更新。复现本节请使用 `main` checkout。
+
+每次运行使用新的输出文件名；脚本拒绝覆盖既有证据，退出时清理临时样本。CI 也会运行这组实验，并将脱敏报告保存为 workflow artifacts。
 
 ## 开发与验证
 
