@@ -1,0 +1,103 @@
+{
+  "schema": 1,
+  "data": "real-native-history",
+  "real_user_data_modified": false,
+  "network_calls": 0,
+  "network_policy": "OS sandbox denies all native-reader networking",
+  "continuation_verified": false,
+  "all_native_checks_passed": false,
+  "codex_cli": "codex-cli 0.154.0",
+  "claude_sdk": "0.2.126",
+  "codex": {
+    "metadata_readable": true,
+    "nonempty_history_read_verified": false,
+    "pagination_attempted": true,
+    "samples": [
+      {
+        "sample_number": 1,
+        "adapter": "codex",
+        "ok": false,
+        "failure": "codex-empty-or-invalid-turns"
+      },
+      {
+        "sample_number": 2,
+        "adapter": "codex",
+        "ok": false,
+        "failure": "codex-empty-or-invalid-turns"
+      }
+    ]
+  },
+  "claude": {
+    "original_namespace_matches_per_sample": [
+      2,
+      2
+    ],
+    "initial_global_lookup_samples": [
+      {
+        "sample_number": 1,
+        "adapter": "claude",
+        "ok": false,
+        "counts_source": {
+          "messages": 32
+        },
+        "counts_restored": {
+          "messages": 87
+        },
+        "canonical_history_equal": false,
+        "source_bytes_unchanged": true,
+        "restored_bytes_unchanged": true
+      },
+      {
+        "sample_number": 2,
+        "adapter": "claude",
+        "ok": false,
+        "counts_source": {
+          "messages": 69
+        },
+        "counts_restored": {
+          "messages": 63
+        },
+        "canonical_history_equal": false,
+        "source_bytes_unchanged": true,
+        "restored_bytes_unchanged": true
+      }
+    ],
+    "exact_source_file_copy_samples": [
+      {
+        "sample_number": 1,
+        "adapter": "claude",
+        "ok": true,
+        "counts_source": {
+          "messages": 87
+        },
+        "counts_restored": {
+          "messages": 87
+        },
+        "canonical_history_equal": true,
+        "source_bytes_unchanged": true,
+        "restored_bytes_unchanged": true
+      },
+      {
+        "sample_number": 2,
+        "adapter": "claude",
+        "ok": true,
+        "counts_source": {
+          "messages": 63
+        },
+        "counts_restored": {
+          "messages": 63
+        },
+        "canonical_history_equal": true,
+        "source_bytes_unchanged": true,
+        "restored_bytes_unchanged": true
+      }
+    ],
+    "exact_file_read_verified": true
+  },
+  "notes": [
+    "Codex eager and paginated readers returned empty history for both archived samples.",
+    "Claude global UUID lookup was ambiguous; exact-file isolated baselines and restored samples matched 87 and 63 messages.",
+    "Exact-file native parse does not prove restoration of the full original environment or model continuation.",
+    "Original user data remains unchanged; cleanup requires separate human confirmation."
+  ]
+}

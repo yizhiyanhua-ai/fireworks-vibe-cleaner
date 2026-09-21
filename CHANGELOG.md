@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Validate 564 real session files (10.181 GiB) into 5.308 GiB of archives, with complete stream restore and final source hashes matching. No original cleanup occurred.
+- Add actual Jev metadata-only comparison: three repeated 20-candidate calls plus a connectivity canary. Preserve native-reader failures and distinguish them from byte recovery.
+- Add optional bounded real-data, live-provider and network-isolated native-reading tools; keep all original cleanup behind explicit human confirmation.
+
 ## 0.1.1 — 2026-09-21
 
 - Real local validation found custom-service logs incorrectly eligible under Codex log directories. Restrict eligibility to the exact `codex-tui.log` basename directly under `log/` or `logs/`; existing plans are rechecked before execution.

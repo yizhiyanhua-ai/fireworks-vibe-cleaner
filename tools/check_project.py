@@ -24,7 +24,8 @@ assert "name: fireworks-vibe-cleaner" in (ROOT / "SKILL.md").read_text()
 for path in (ROOT / "docs/experiments").glob("*.json"):
     report = json.loads(path.read_text())
     assert report["real_user_data_modified"] is False
-    assert report["network_calls"] == 0
+    if report["data"] != "real-live-jev":
+        assert report["network_calls"] == 0
     if report["data"] == "synthetic-only":
         assert report["passed"] and len(report["experiments"]) == 7
         assert all(row["passed"] for row in report["experiments"])
@@ -37,6 +38,29 @@ for path in (ROOT / "docs/experiments").glob("*.json"):
             assert row["source_hashes_unchanged"] and row["extracted_hashes_match"]
             assert row["source_bytes_deleted"] == row["cleanup_bytes_reclaimed"] == 0
             assert row["source_bytes_before"] == row["source_bytes_after"]
+    elif report["data"] == "real-local-large":
+        assert report["source_bytes"] >= 10 * 1024**3
+        assert report["final_all_source_hashes_unchanged"]
+        assert report["source_bytes_deleted"] == report["cleanup_bytes_reclaimed"] == 0
+        assert report["cleanup_requires_human_confirmation"]
+        for row in report["rows"]:
+            assert row["source_bytes"] == row["full_stream_restored_bytes"]
+            assert row["all_restore_hashes_match"] and row["strict_jsonl_valid"]
+    elif report["data"] == "real-live-jev":
+        assert report["transport_mocked"] is False
+        assert report["network_calls"] == report["successful_calls"] == len(report["runs"])
+        assert report["deletion_actions"] == 0
+        for run in report["runs"]:
+            assert run["status"] == "ok"
+            assert all(a["choice"] in {"keep", "review", "backup"} for a in run["answers"].values())
+    elif report["data"] == "real-native-history":
+        # A failed native recovery check is a finding, never rewritten as success.
+        assert report["continuation_verified"] is False
+        codex_ok = all(row["ok"] for row in report["codex"]["samples"])
+        claude_ok = all(row["ok"] for row in report["claude"]["exact_source_file_copy_samples"])
+        assert report["all_native_checks_passed"] == (codex_ok and claude_ok)
+        assert report["codex"]["nonempty_history_read_verified"] == codex_ok
+        assert report["claude"]["exact_file_read_verified"] == claude_ok
     else:
         raise AssertionError("Unknown public evidence type")
     forbidden_keys = {"path", "root", "relative", "username", "hostname", "session_id", "api_key", "token"}

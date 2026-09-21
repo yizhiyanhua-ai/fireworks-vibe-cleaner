@@ -1,0 +1,784 @@
+{
+  "schema": 1,
+  "data": "real-live-jev",
+  "date": "2026-09-21",
+  "transport_mocked": false,
+  "real_user_data_modified": false,
+  "network_calls": 3,
+  "successful_calls": 3,
+  "dataset_files": 564,
+  "dataset_bytes": 10932021589,
+  "sample_files": 20,
+  "sample_metadata": [
+    {
+      "candidate": "c0",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "recent",
+      "rule_eligible": false,
+      "active_state": "unknown"
+    },
+    {
+      "candidate": "c1",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "recent",
+      "rule_eligible": false,
+      "active_state": "unknown"
+    },
+    {
+      "candidate": "c2",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "recent",
+      "rule_eligible": false,
+      "active_state": "unknown"
+    },
+    {
+      "candidate": "c3",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "recent",
+      "rule_eligible": false,
+      "active_state": "unknown"
+    },
+    {
+      "candidate": "c4",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "recent",
+      "rule_eligible": false,
+      "active_state": "unknown"
+    },
+    {
+      "candidate": "c5",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "recent",
+      "rule_eligible": false,
+      "active_state": "unknown"
+    },
+    {
+      "candidate": "c6",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "recent",
+      "rule_eligible": false,
+      "active_state": "unknown"
+    },
+    {
+      "candidate": "c7",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "recent",
+      "rule_eligible": false,
+      "active_state": "unknown"
+    },
+    {
+      "candidate": "c8",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "recent",
+      "rule_eligible": false,
+      "active_state": "unknown"
+    },
+    {
+      "candidate": "c9",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "recent",
+      "rule_eligible": false,
+      "active_state": "unknown"
+    },
+    {
+      "candidate": "c10",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "recent",
+      "rule_eligible": false,
+      "active_state": "unknown"
+    },
+    {
+      "candidate": "c11",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "recent",
+      "rule_eligible": false,
+      "active_state": "unknown"
+    },
+    {
+      "candidate": "c12",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "old",
+      "rule_eligible": false,
+      "active_state": "unknown"
+    },
+    {
+      "candidate": "c13",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "old",
+      "rule_eligible": false,
+      "active_state": "unknown"
+    },
+    {
+      "candidate": "c14",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "old",
+      "rule_eligible": false,
+      "active_state": "unknown"
+    },
+    {
+      "candidate": "c15",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "old",
+      "rule_eligible": false,
+      "active_state": "unknown"
+    },
+    {
+      "candidate": "c16",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "old",
+      "rule_eligible": false,
+      "active_state": "unknown"
+    },
+    {
+      "candidate": "c17",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "old",
+      "rule_eligible": false,
+      "active_state": "unknown"
+    },
+    {
+      "candidate": "c18",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "old",
+      "rule_eligible": false,
+      "active_state": "unknown"
+    },
+    {
+      "candidate": "c19",
+      "category": "session",
+      "size_band": "large",
+      "age_band": "old",
+      "rule_eligible": false,
+      "active_state": "unknown"
+    }
+  ],
+  "request_sha256": "b98a30c66ac0986763fc1a82314197c60339bcdaa0700d28184f6dc330e727d5",
+  "runs": [
+    {
+      "status": "ok",
+      "calls": 1,
+      "mode": "advisory-only",
+      "model": "jev-1.13.0",
+      "elapsed_ms": 1286,
+      "answers": {
+        "c0": {
+          "choice": "review",
+          "confidence": 0.98,
+          "probabilities": {
+            "keep": 0.0,
+            "backup": 0.01,
+            "review": 0.99
+          }
+        },
+        "c1": {
+          "choice": "review",
+          "confidence": 0.96,
+          "probabilities": {
+            "keep": 0.02,
+            "backup": 0.01,
+            "review": 0.97
+          }
+        },
+        "c2": {
+          "choice": "review",
+          "confidence": 0.97,
+          "probabilities": {
+            "keep": 0.01,
+            "backup": 0.01,
+            "review": 0.98
+          }
+        },
+        "c3": {
+          "choice": "review",
+          "confidence": 0.96,
+          "probabilities": {
+            "keep": 0.01,
+            "backup": 0.02,
+            "review": 0.97
+          }
+        },
+        "c4": {
+          "choice": "review",
+          "confidence": 0.97,
+          "probabilities": {
+            "keep": 0.01,
+            "backup": 0.01,
+            "review": 0.98
+          }
+        },
+        "c5": {
+          "choice": "review",
+          "confidence": 0.96,
+          "probabilities": {
+            "keep": 0.01,
+            "backup": 0.02,
+            "review": 0.97
+          }
+        },
+        "c6": {
+          "choice": "review",
+          "confidence": 0.97,
+          "probabilities": {
+            "keep": 0.01,
+            "backup": 0.01,
+            "review": 0.98
+          }
+        },
+        "c7": {
+          "choice": "review",
+          "confidence": 0.97,
+          "probabilities": {
+            "keep": 0.01,
+            "backup": 0.01,
+            "review": 0.98
+          }
+        },
+        "c8": {
+          "choice": "review",
+          "confidence": 0.97,
+          "probabilities": {
+            "keep": 0.01,
+            "backup": 0.01,
+            "review": 0.98
+          }
+        },
+        "c9": {
+          "choice": "review",
+          "confidence": 0.97,
+          "probabilities": {
+            "keep": 0.01,
+            "backup": 0.01,
+            "review": 0.98
+          }
+        },
+        "c10": {
+          "choice": "review",
+          "confidence": 0.96,
+          "probabilities": {
+            "keep": 0.02,
+            "backup": 0.01,
+            "review": 0.97
+          }
+        },
+        "c11": {
+          "choice": "review",
+          "confidence": 0.96,
+          "probabilities": {
+            "keep": 0.02,
+            "backup": 0.01,
+            "review": 0.97
+          }
+        },
+        "c12": {
+          "choice": "review",
+          "confidence": 0.96,
+          "probabilities": {
+            "keep": 0.01,
+            "backup": 0.02,
+            "review": 0.97
+          }
+        },
+        "c13": {
+          "choice": "review",
+          "confidence": 0.95,
+          "probabilities": {
+            "keep": 0.01,
+            "backup": 0.02,
+            "review": 0.97
+          }
+        },
+        "c14": {
+          "choice": "review",
+          "confidence": 0.96,
+          "probabilities": {
+            "keep": 0.01,
+            "backup": 0.02,
+            "review": 0.97
+          }
+        },
+        "c15": {
+          "choice": "review",
+          "confidence": 0.96,
+          "probabilities": {
+            "keep": 0.01,
+            "backup": 0.01,
+            "review": 0.98
+          }
+        },
+        "c16": {
+          "choice": "review",
+          "confidence": 0.96,
+          "probabilities": {
+            "keep": 0.01,
+            "backup": 0.02,
+            "review": 0.97
+          }
+        },
+        "c17": {
+          "choice": "review",
+          "confidence": 0.97,
+          "probabilities": {
+            "keep": 0.01,
+            "backup": 0.01,
+            "review": 0.98
+          }
+        },
+        "c18": {
+          "choice": "review",
+          "confidence": 0.96,
+          "probabilities": {
+            "keep": 0.01,
+            "backup": 0.02,
+            "review": 0.97
+          }
+        },
+        "c19": {
+          "choice": "review",
+          "confidence": 0.95,
+          "probabilities": {
+            "keep": 0.01,
+            "backup": 0.02,
+            "review": 0.97
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 3466,
+        "output_tokens": 733
+      }
+    },
+    {
+      "status": "ok",
+      "calls": 1,
+      "mode": "advisory-only",
+      "model": "jev-1.13.0",
+      "elapsed_ms": 2010,
+      "answers": {
+        "c0": {
+          "choice": "review",
+          "confidence": 0.97,
+          "probabilities": {
+            "keep": 0.01,
+            "review": 0.98,
+            "backup": 0.01
+          }
+        },
+        "c1": {
+          "choice": "review",
+          "confidence": 0.97,
+          "probabilities": {
+            "review": 0.98,
+            "keep": 0.01,
+            "backup": 0.01
+          }
+        },
+        "c2": {
+          "choice": "review",
+          "confidence": 0.97,
+          "probabilities": {
+            "keep": 0.01,
+            "review": 0.98,
+            "backup": 0.01
+          }
+        },
+        "c3": {
+          "choice": "review",
+          "confidence": 0.97,
+          "probabilities": {
+            "review": 0.98,
+            "keep": 0.01,
+            "backup": 0.01
+          }
+        },
+        "c4": {
+          "choice": "review",
+          "confidence": 0.96,
+          "probabilities": {
+            "review": 0.97,
+            "keep": 0.01,
+            "backup": 0.02
+          }
+        },
+        "c5": {
+          "choice": "review",
+          "confidence": 0.96,
+          "probabilities": {
+            "review": 0.98,
+            "keep": 0.01,
+            "backup": 0.01
+          }
+        },
+        "c6": {
+          "choice": "review",
+          "confidence": 0.97,
+          "probabilities": {
+            "review": 0.98,
+            "keep": 0.01,
+            "backup": 0.01
+          }
+        },
+        "c7": {
+          "choice": "review",
+          "confidence": 0.97,
+          "probabilities": {
+            "review": 0.98,
+            "keep": 0.01,
+            "backup": 0.01
+          }
+        },
+        "c8": {
+          "choice": "review",
+          "confidence": 0.97,
+          "probabilities": {
+            "review": 0.97,
+            "keep": 0.01,
+            "backup": 0.02
+          }
+        },
+        "c9": {
+          "choice": "review",
+          "confidence": 0.97,
+          "probabilities": {
+            "review": 0.98,
+            "keep": 0.01,
+            "backup": 0.01
+          }
+        },
+        "c10": {
+          "choice": "review",
+          "confidence": 0.96,
+          "probabilities": {
+            "review": 0.97,
+            "keep": 0.01,
+            "backup": 0.02
+          }
+        },
+        "c11": {
+          "choice": "review",
+          "confidence": 0.96,
+          "probabilities": {
+            "review": 0.98,
+            "keep": 0.01,
+            "backup": 0.01
+          }
+        },
+        "c12": {
+          "choice": "review",
+          "confidence": 0.96,
+          "probabilities": {
+            "keep": 0.01,
+            "review": 0.97,
+            "backup": 0.02
+          }
+        },
+        "c13": {
+          "choice": "review",
+          "confidence": 0.96,
+          "probabilities": {
+            "review": 0.97,
+            "keep": 0.01,
+            "backup": 0.02
+          }
+        },
+        "c14": {
+          "choice": "review",
+          "confidence": 0.96,
+          "probabilities": {
+            "keep": 0.01,
+            "review": 0.97,
+            "backup": 0.02
+          }
+        },
+        "c15": {
+          "choice": "review",
+          "confidence": 0.95,
+          "probabilities": {
+            "review": 0.97,
+            "keep": 0.01,
+            "backup": 0.02
+          }
+        },
+        "c16": {
+          "choice": "review",
+          "confidence": 0.97,
+          "probabilities": {
+            "keep": 0.01,
+            "review": 0.98,
+            "backup": 0.01
+          }
+        },
+        "c17": {
+          "choice": "review",
+          "confidence": 0.97,
+          "probabilities": {
+            "keep": 0.01,
+            "review": 0.98,
+            "backup": 0.01
+          }
+        },
+        "c18": {
+          "choice": "review",
+          "confidence": 0.96,
+          "probabilities": {
+            "review": 0.97,
+            "keep": 0.01,
+            "backup": 0.02
+          }
+        },
+        "c19": {
+          "choice": "review",
+          "confidence": 0.97,
+          "probabilities": {
+            "review": 0.98,
+            "keep": 0.01,
+            "backup": 0.01
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 3466,
+        "output_tokens": 733
+      }
+    },
+    {
+      "status": "ok",
+      "calls": 1,
+      "mode": "advisory-only",
+      "model": "jev-1.13.0",
+      "elapsed_ms": 3170,
+      "answers": {
+        "c0": {
+          "choice": "review",
+          "confidence": 0.98,
+          "probabilities": {
+            "backup": 0.01,
+            "review": 0.99,
+            "keep": 0.0
+          }
+        },
+        "c1": {
+          "choice": "review",
+          "confidence": 0.96,
+          "probabilities": {
+            "backup": 0.01,
+            "review": 0.98,
+            "keep": 0.01
+          }
+        },
+        "c2": {
+          "choice": "review",
+          "confidence": 0.96,
+          "probabilities": {
+            "backup": 0.01,
+            "review": 0.98,
+            "keep": 0.01
+          }
+        },
+        "c3": {
+          "choice": "review",
+          "confidence": 0.97,
+          "probabilities": {
+            "backup": 0.01,
+            "review": 0.98,
+            "keep": 0.01
+          }
+        },
+        "c4": {
+          "choice": "review",
+          "confidence": 0.97,
+          "probabilities": {
+            "backup": 0.01,
+            "review": 0.98,
+            "keep": 0.01
+          }
+        },
+        "c5": {
+          "choice": "review",
+          "confidence": 0.96,
+          "probabilities": {
+            "backup": 0.01,
+            "review": 0.98,
+            "keep": 0.01
+          }
+        },
+        "c6": {
+          "choice": "review",
+          "confidence": 0.97,
+          "probabilities": {
+            "backup": 0.01,
+            "review": 0.98,
+            "keep": 0.01
+          }
+        },
+        "c7": {
+          "choice": "review",
+          "confidence": 0.97,
+          "probabilities": {
+            "backup": 0.01,
+            "review": 0.98,
+            "keep": 0.01
+          }
+        },
+        "c8": {
+          "choice": "review",
+          "confidence": 0.97,
+          "probabilities": {
+            "backup": 0.01,
+            "review": 0.98,
+            "keep": 0.01
+          }
+        },
+        "c9": {
+          "choice": "review",
+          "confidence": 0.97,
+          "probabilities": {
+            "backup": 0.01,
+            "review": 0.98,
+            "keep": 0.01
+          }
+        },
+        "c10": {
+          "choice": "review",
+          "confidence": 0.97,
+          "probabilities": {
+            "backup": 0.01,
+            "review": 0.98,
+            "keep": 0.01
+          }
+        },
+        "c11": {
+          "choice": "review",
+          "confidence": 0.96,
+          "probabilities": {
+            "backup": 0.01,
+            "review": 0.98,
+            "keep": 0.01
+          }
+        },
+        "c12": {
+          "choice": "review",
+          "confidence": 0.96,
+          "probabilities": {
+            "backup": 0.02,
+            "review": 0.97,
+            "keep": 0.01
+          }
+        },
+        "c13": {
+          "choice": "review",
+          "confidence": 0.96,
+          "probabilities": {
+            "backup": 0.02,
+            "review": 0.97,
+            "keep": 0.01
+          }
+        },
+        "c14": {
+          "choice": "review",
+          "confidence": 0.95,
+          "probabilities": {
+            "backup": 0.02,
+            "review": 0.97,
+            "keep": 0.01
+          }
+        },
+        "c15": {
+          "choice": "review",
+          "confidence": 0.95,
+          "probabilities": {
+            "backup": 0.03,
+            "review": 0.96,
+            "keep": 0.01
+          }
+        },
+        "c16": {
+          "choice": "review",
+          "confidence": 0.96,
+          "probabilities": {
+            "backup": 0.02,
+            "review": 0.97,
+            "keep": 0.01
+          }
+        },
+        "c17": {
+          "choice": "review",
+          "confidence": 0.96,
+          "probabilities": {
+            "backup": 0.02,
+            "review": 0.97,
+            "keep": 0.01
+          }
+        },
+        "c18": {
+          "choice": "review",
+          "confidence": 0.96,
+          "probabilities": {
+            "backup": 0.02,
+            "review": 0.97,
+            "keep": 0.01
+          }
+        },
+        "c19": {
+          "choice": "review",
+          "confidence": 0.96,
+          "probabilities": {
+            "backup": 0.02,
+            "review": 0.97,
+            "keep": 0.01
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 3466,
+        "output_tokens": 733
+      }
+    }
+  ],
+  "decisions": {
+    "review": 60
+  },
+  "median_end_to_end_ms": 2010,
+  "same_choices_across_repeats": true,
+  "input_tokens": 10398,
+  "estimated_input_cost_usd": 0.000436716,
+  "price_per_million_input_usd": 0.042,
+  "price_source": "https://docs.typesafe.ai/models",
+  "billing_statement_verified": false,
+  "deletion_actions": 0,
+  "rule_baseline": "Retain all original sessions; no cleanup without human confirmation.",
+  "notes": [
+    "Twenty representative metadata-only candidates at most; not transcript semantic review.",
+    "Repeated live calls measure observed consistency and round-trip latency only.",
+    "No labeled ground truth: accuracy or superiority over rules is not established.",
+    "Token-price estimate is not an authoritative billing receipt; failed-call usage is unknown."
+  ],
+  "connectivity_canary": {
+    "successful_calls": 1,
+    "candidates": 3,
+    "model": "jev-1.13.0",
+    "input_tokens": 743,
+    "elapsed_ms": 2193
+  },
+  "total_live_calls_including_canary": 4,
+  "total_input_tokens_including_canary": 11141,
+  "total_estimated_cost_usd": 0.000467922
+}

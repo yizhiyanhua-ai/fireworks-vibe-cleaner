@@ -102,35 +102,43 @@ fireworks-vibe-cleaner advise --scan scan.json --id CANDIDATE_ID --enable-networ
 
 One invocation makes at most one TypeSafe API call for 1–20 selected candidates. It sends temporary candidate labels, category, size/age bands, rule eligibility and unknown activity status. It does **not** send paths, filenames, original candidate IDs, session text, source code or free-text reasons. The payload cap is 16 KiB, response cap 64 KiB, network timeout 8 seconds; redirects and automatic retries are disabled.
 
-Jev may suggest `keep`, `review` or `backup`. It cannot authorize deletion, change a plan or override a protection rule. Its confidence is not a probability of safe deletion. Missing credentials, HTTP errors or invalid responses fall back to rules-only mode. Calls may incur provider charges; a one-call cap is not a monetary budget guarantee. Live endpoint and accuracy verification are pending; core cleanup does not depend on Jev availability.
+Jev may suggest `keep`, `review` or `backup`. It cannot authorize deletion, change a plan or override a protection rule. Its confidence is not a probability of safe deletion. Missing credentials, HTTP errors or invalid responses fall back to rules-only mode. Calls may incur provider charges; a one-call cap is not a monetary budget guarantee. Live metadata-only calls succeeded on 2026-09-21 (Jev 1.13.0); measured results are below. Accuracy and superiority over rules remain unverified. Core cleanup does not depend on Jev availability.
 
-## Real local validation
+## Real 10 GiB validation and live Jev comparison
 
-**Real data, 2026-09-21 · macOS 26.5.1 · arm64 · Python 3.14.6. Actual cleanup reclaimed 0 bytes.** This result does not demonstrate that v0.1 solves large session storage growth. No fixtures or mocked service responses were used for the measurements below.
+**Cleanup of real user data always requires explicit human confirmation of the concrete scope.** This run only read originals, created private archives and verified recovery bytes. No original was quarantined, moved or deleted.
 
-| Measurement | Before | After / observed result |
-| --- | ---: | --- |
-| Real inventory | 49,064 files; 21,165,470,439 logical bytes (19.71 GiB) | Metadata-only scan; 225 symlink/dependency boundaries skipped; not a complete disk total |
-| Session footprint | 2,615 files; 15,038,397,937 bytes (14.01 GiB) | Originals retained; session deletion and harness resume remain unsupported |
-| Cleanup policy correction, identical snapshot | 8 custom-service logs incorrectly eligible; 196,608 allocated bytes | All 8 protected after narrowing the Codex filename allowlist; **0 eligible files** |
-| Real Codex session backup (2 files) | 126,384,858 bytes (120.53 MiB) | ZIP 37,856,051 bytes (36.10 MiB), 70.05% smaller; 1978 ms |
-| Real Claude session backup (2 files) | 98,252,538 bytes (93.70 MiB) | ZIP 21,852,674 bytes (20.84 MiB), 77.76% smaller; 1214 ms |
-| Byte recovery | SHA-256 of each real source recorded privately | All 4 extracted copies matched; all 4 source hashes unchanged |
-| Actual disk benefit | No approved eligible cleanup target after correction | **0 source bytes deleted; 0 cleanup bytes reclaimed**; retained ZIPs/manifests added 59,712,330 logical bytes (56.95 MiB) |
-| Live Jev comparison | No inference request authorized for this run | **Not run**; no accuracy, latency or benefit claim based on a mock |
+Measured on 2026-09-21: **564 existing session files, 10,932,021,589 bytes (10.181 GiB)**. Codex samples were at least 7 days old; Claude samples at least 1 day old. Selection checked open handles and froze full-file hashes. The source inventory skipped 227 boundaries and is not a whole-disk inventory.
 
-The four sessions were selected from stable files at least one day old, at most 64 MiB each, with no open handle at selection. Compression ratios apply to these samples only. Backup durations measure the backup operation, including its readback, and exclude initial hashing/extraction. Originals remain in place; smaller ZIPs are **not** reclaimed space. Observed volume free-space deltas were −38,461,440 bytes (Codex volume) and −21,991,424 bytes (Claude volume), including concurrent background writes; neither is attributed solely to the experiment. The extracted verification copies were removed; private archives and manifests remain local.
+| Real dataset | Files | Original bytes | ZIP bytes | Archive size reduction | Full stream restore / final source hash |
+| --- | ---: | ---: | ---: | ---: | --- |
+| Codex historical sessions | 560 | 9,932,261,559 (9.250 GiB) | 5,447,045,764 (5.073 GiB) | 45.16% | All matched |
+| Claude historical sessions | 4 | 999,760,030 (0.931 GiB) | 252,487,818 (0.235 GiB) | 74.75% | All matched |
+| **Total** | **564** | **10.181 GiB** | **5.308 GiB** | **47.86%** | **564/564 matched** |
 
-The real scan exposed a safety bug: arbitrary custom-service `.log` files in a Codex log directory were treated as harness logs. Current `main` restricts Codex cleanup to `log/codex-tui.log` and `logs/codex-tui.log`. Old plans are reclassified at execution and rejected when outside this allowlist. This result establishes a protection fix and byte-preserving backups; **real quarantine/purge and session resumption were not validated**.
+All **1,107,896 nonblank JSONL records** passed parsing, with zero malformed or over-limit lines. Every archive was fully decompressed through SHA-256 verification; this was streamed verification, not restoration over live harness directories. The logical difference between originals and ZIPs is **4.873 GiB**. **Actual cleanup reclaimed 0 bytes** because originals remain; archives and retained validation copies consume additional space. This difference is not a promised filesystem reclaim amount. The run was paused once to add a 64 MiB JSONL line-length limit (not a process memory cap), then resumed using one completed shard; its timings/free-space observations are scoped to that resumed invocation, not a cold-start performance benchmark.
 
-[Sanitized real results](docs/experiments/real-local-2026-09-21.json) · [Real-data validation script](tools/real_validation.py). Public results contain aggregate sizes/counts/timings only; no usernames, paths, filenames, IDs, content hashes, transcripts or credentials. Raw inventories and backups must stay private.
+| Native history check, network denied by OS sandbox | Actual result | Acceptance |
+| --- | --- | --- |
+| Codex CLI 0.154.0, 2 archived samples | Eager and paginated read APIs did not produce nonempty history | **Not validated**; do not claim session restoration or continuation |
+| Claude SDK 0.2.126, 2 samples | Global UUID lookup initially selected different duplicates; each UUID had 2 files in the original namespace | Global lookup was ambiguous |
+| Claude, baseline bound to the exact source file | Isolated source copies and restored files matched **87** and **63** messages, including canonical history digests | Exact-file native reading passed; full environment restoration/continuation unverified |
 
-```sh
-python3 scripts/fireworks-vibe-cleaner.py scan --output artifacts/private-inventory.json
-python3 tools/real_validation.py --inventory artifacts/private-inventory.json --output artifacts/real-results.json
-```
+| Rule-only baseline vs live Jev | Observed result |
+| --- | --- |
+| Rule-only behavior | Retain all 564 originals; cleanup requires human confirmation |
+| Live sample and repetition | 20 real candidates selected from the frozen dataset; 3 calls, 60 decisions, **all `review`**; same choices across all repetitions |
+| Actual provider and round-trip latency | `jev-1.13.0`; 1,286 / 2,010 / 3,170 ms; median **2,010 ms** |
+| Usage and cost | Comparison: 10,398 input tokens. Including the 3-candidate connectivity canary: **4 live calls, 11,141 input tokens**, estimated **US$0.000467922** at the [official input price](https://docs.typesafe.ai/models); billing-statement amount not verified |
+| Interpretation | Live structured inference is verified; no labeled ground truth or evidence that Jev improves cleanup accuracy or permits broader deletion |
 
-Use a new output filename. The script creates private same-volume backups and temporary extraction copies; it never removes original sessions. This is a local opt-in operation, **not a CI job**. [Historical synthetic regression results](docs/experiments/synthetic-regression.md) remain available for safety mechanics and are not effectiveness evidence. CI continues to exercise fixtures without accessing personal data.
+Only category, size/age bands, rule eligibility and unknown active-state metadata were sent. No path, filename, original ID, transcript, code or credential was included in model state. A model's `review` or confidence never replaces human cleanup approval.
+
+[10 GiB sanitized measurements](docs/experiments/real-10g-2026-09-21.json) · [Live Jev results](docs/experiments/real-jev-2026-09-21.json) · [Native-read findings, including failures](docs/experiments/real-native-history-2026-09-21.json).
+
+Reproduction tools are available in current `main` (the v0.1.1 release predates this validation): [large real-data validation](tools/large_real_validation.py), [opt-in live Jev comparison](tools/live_jev_validation.py), and [macOS network-isolated native reader](tools/native_history_validation.py). They create private artifacts and never remove originals. Native tools/SDK are optional local dependencies, not automatic installs. These real-data or paid-provider checks never run in CI.
+
+The earlier 214 MiB validation and custom-log safety finding are preserved in [historical real-data evidence](docs/experiments/real-small-validation.md).
 
 ## Development and evidence
 

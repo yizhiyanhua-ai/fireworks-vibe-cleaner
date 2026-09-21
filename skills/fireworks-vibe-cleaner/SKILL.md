@@ -30,3 +30,9 @@ Use the bundled CLI as the sole cleanup implementation. Resolve this Skill's dir
 Only use `advise --scan <file> --id <id> --enable-network --output <new-file>` after user authorization to send the documented metadata to TypeSafe and any applicable cost authorization. Use securely injected `TYPESAFE_API_KEY`; do not print or persist it. One call supports up to 20 candidates, with no automatic retries. No raw paths, filenames, transcript/code content or original IDs leave the machine.
 
 Advice is limited to keep/review/backup, cannot alter a plan, and never authorizes deletion. Confidence is not deletion safety. Missing credentials or service failure leave rules-only operation available. Do not install or modify the user's separate `jev` CLI. Do not claim live provider verification unless current evidence supports it.
+
+## Explicitly requested real-data validation
+
+Use `tools/large_real_validation.py` only when the user requests a bounded real-session archive benchmark. It retains originals and writes private same-volume archives; full recovery bytes are verified as a stream. `tools/live_jev_validation.py` is separately opt-in and requires network/cost authorization. The optional macOS `tools/native_history_validation.py` denies network access and checks history parsing, never continuation.
+
+Keep all original cleanup behind explicit human confirmation of the concrete scope and action. Validation authorization, successful hashes, compression ratios and model confidence do not approve quarantine, movement or deletion. Preserve and report failed native-reader checks. Never publish raw inventories, paths, manifests, session IDs or content. Archives and verification copies add storage until an independently approved cleanup occurs.
