@@ -1,6 +1,6 @@
 # Compatibility and limits
 
-| Component | v0.2.0 contract |
+| Component | Current contract |
 | --- | --- |
 | Runtime | Python 3.11+, macOS/Linux; Windows unsupported |
 | Filesystem mutation | POSIX primitives, private owned state directory, stopped writers and `lsof`; same-volume regular single-link files only |
@@ -23,6 +23,8 @@ A scan can be incomplete because of a file limit, permission errors, symlinks, v
 
 Backups are unencrypted file copies on the source volume. They do not capture all dependency graphs, attachments, application databases or external indexes required for harness resume. Main-transcript source removal is an independently approved flow that leaves indexes and related files untouched. Cross-volume archival is not implemented.
 
-CI configuration and the actual tested matrix are separate evidence. Consult the workflow and [release notes](releases/v0.2.0.md) for run results. Filesystems with snapshots, compression, sparse allocation or shared blocks may show a volume free-space change different from deleted logical bytes.
+CI configuration and the actual tested matrix are separate evidence. Consult the workflow and [release notes](releases/v0.3.0.md) for run results. Filesystems with snapshots, compression, sparse allocation or shared blocks may show a volume free-space change different from deleted logical bytes.
 
 Jev setup is recommended, with explicit rules-only fallback. Dynamic advice is keep/review/backup/delete; delete is only available for locally checked old logs/caches, never a model authorization. The four historical live calls used earlier options, so their results do not establish new delete-advice quality. v0.2.0 has 63 passing local tests. One new live call with the expanded contract returned review for all 20 candidates; see [the sanitized record](experiments/real-jev-v02.json). Real-original removal awaits exact human approval.
+
+Native history audit requires recognized state_5 pin/lineage columns and at most 20,000 indexed threads. Executable plans require a complete audit. Native archive/unarchive is currently pinned to macOS and codex-cli 0.154.0 with a bound native binary and OS network/exec/write restrictions; other versions/platforms refuse writes. See [the history guide](history.md) for descendant protection, timestamp changes and separate approval. This capability does not change the earlier native-reader failures or establish continuation.

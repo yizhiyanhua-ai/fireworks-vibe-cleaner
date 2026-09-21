@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0 — 2026-09-21
+
+- Add configurable Codex history count, total size and individual size pressure audits. Default triggers: more than 200 unarchived threads or 3 GiB. Never trigger automatic cleanup.
+- Add exact-approved native history archive and individual unarchive over a fully checked descendant tree; preserve pinned/current/recent/explicitly kept threads.
+- Refuse incomplete index/file/lineage audits, unrecognized runtimes, destination conflicts and changed plans. Initial native writes require macOS and Codex 0.154.0 with OS execution, write and network restrictions.
+- Require an inline overview before the complete plan link. Native archive promises zero disk reclaim; source removal remains separately approved.
+- Publish sanitized real read-only audit and isolated actual-Codex synthetic workflow evidence. Real history archival and native continuation remain unverified.
+
 ## 0.2.0 — 2026-09-21
 
 - Add verified-archive plans and separately approved removal of recognized old main transcripts, with byte/path restoration and explicit history-risk acknowledgement. No index repair or native continuation claim.

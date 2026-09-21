@@ -67,6 +67,26 @@ for path in (ROOT / "docs/experiments").glob("*.json"):
         assert len(report["actual_cli_refusal_checks"]) == 3
         assert all(row["exit_code"] == 2 and not row["run_created"]
                    for row in report["actual_cli_refusal_checks"])
+    elif report["data"] == "real-codex-history-audit":
+        assert report["real_threads_archived"] == report["verified_reclaimed_bytes"] == 0
+        metrics = report["metrics"]
+        assert metrics["indexed_threads"] == metrics["archived_threads"] + metrics["unarchived_threads"]
+        assert metrics["known_logical_bytes"] > 0 and metrics["native_archive_reclaim_bytes"] == 0
+        assert report["audit_complete"] is False
+        assert report["native_plan_refusal"] == {
+            "exit_code": 2, "reason": "incomplete-index-file-lineage-coverage",
+            "plan_created": False, "run_created": False}
+    elif report["data"] == "synthetic-native-archive":
+        assert report["transport_mocked"] is False and report["network_denied"]
+        assert report["other_executables_denied"] and report["writes_limited_to_fixture_and_runtime_home"]
+        assert report["synthetic_threads"] == 4
+        assert report["archived_threads"] == report["restored_threads"] == 3
+        assert report["archive_verify_passed"] and report["restore_verify_passed"]
+        assert report["all_original_paths_and_content_hashes_match"]
+        assert report["unrelated_thread_preserved_after_roundtrip"]
+        assert report["verified_reclaimed_bytes"] == 0 and not report["harness_resume_verified"]
+        assert len(report["refused_cases"]) == 4
+        assert all(r["exit_code"] == 2 for r in report["refused_cases"])
     elif report["data"] == "real-native-history":
         # A failed native recovery check is a finding, never rewritten as success.
         assert report["continuation_verified"] is False

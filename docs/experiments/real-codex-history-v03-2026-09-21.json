@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "data": "real-codex-history-audit",
+  "observed_at": "2026-09-21T14:50:43.536472+00:00",
+  "real_user_data_modified": false,
+  "network_calls": 0,
+  "audit_complete": false,
+  "thresholds": {
+    "total_bytes": 3221225472,
+    "single_bytes": 3221225472,
+    "count_limit": 200
+  },
+  "retention": {
+    "min_age_days": 30,
+    "keep_recent": 100
+  },
+  "metrics": {
+    "indexed_threads": 3947,
+    "unarchived_threads": 2862,
+    "archived_threads": 1085,
+    "known_logical_bytes": 10884095473,
+    "known_allocated_bytes": 10888978432,
+    "missing_or_unsafe_files": 2027,
+    "measured_files": 1920,
+    "largest_known_session_bytes": 1062391148,
+    "unresolved_edges": 25,
+    "lineage_issues": 884,
+    "native_candidate_roots": 57,
+    "protected_threads": 3035,
+    "triggers": {
+      "total_bytes_exceeded": true,
+      "single_session_exceeded": false,
+      "unarchived_count_exceeded": true
+    },
+    "native_archive_reclaim_bytes": 0
+  },
+  "native_plan_refusal": {
+    "exit_code": 2,
+    "reason": "incomplete-index-file-lineage-coverage",
+    "plan_created": false,
+    "run_created": false
+  },
+  "real_threads_archived": 0,
+  "verified_reclaimed_bytes": 0,
+  "limits": [
+    "Index-wide counts; not the UI-filtered list.",
+    "Known byte totals cover readable indexed files and exclude unindexed files.",
+    "Missing/unsafe records and lineage issues overlap; they do not prove files were deleted.",
+    "Preliminary candidates cannot be executed while audit coverage is incomplete."
+  ]
+}

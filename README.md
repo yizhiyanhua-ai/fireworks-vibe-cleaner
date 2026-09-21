@@ -14,7 +14,7 @@ Use plain language in Codex or Claude Code to inspect coding logs, conversations
 
 ### 1. Install, then configure Jev
 
-> Install fireworks-vibe-cleaner v0.2.0 from https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner into this tool's personal Skill directory. Do not overwrite an existing installation or clean any files. Then help me configure Jev securely.
+> Install fireworks-vibe-cleaner v0.3.0 from https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner into this tool's personal Skill directory. Do not overwrite an existing installation or clean any files. Then help me configure Jev securely.
 
 You need macOS/Linux and Python 3.11+. See the [manual installation guide](docs/cli.md#install). Jev uses `TYPESAFE_API_KEY`, injected through a secret manager or process environment; never paste the key into chat, a report or command history. `doctor` checks whether a key is present, not whether authentication or inference succeeds.
 
@@ -39,6 +39,24 @@ There are two separate cleanup paths:
 
 A broad cleanup request does not approve unseen files. Stop relevant writers before mutation; `--writers-stopped` records an acknowledgement, not a process-stopping action. Changed scope or source requires a new plan.
 
+## When Codex history becomes too large
+
+> Use fireworks-vibe-cleaner to check my Codex history. If indexed sessions exceed 3 GiB in total, one session exceeds 3 GiB, or the unarchived count exceeds 200, show me a suggested cleanup scope. Keep the newest 100 sessions, everything updated in the last 30 days, pinned sessions, the current thread and my explicit keep list. Give me an overview in chat before linking the full plan. Wait for my approval of the exact scope.
+
+These configurable thresholds trigger **advice only**, never automatic archiving or deletion. `history-audit` reads Codex's canonical index through read-only SQLite access and checks known pin/lineage fields and bounded transcript headers. Counts cover the index, not the exact list currently displayed under UI filters. Byte totals count readable indexed files and are a lower bound when files cannot be checked; incomplete coverage is disclosed.
+
+Before asking for approval, show the triggered thresholds, indexed/unarchived counts, measured bytes and missing coverage, protected counts, proposed roots **and every affected descendant**, intended operation, recovery limits and expected disk reclaim. Then link the complete plan and give its hash. A link alone is not a reviewable overview.
+
+**Native archive changes history visibility; expected disk reclaim is 0 bytes.** The supported Codex 0.154.0 archive API cascades to descendants, so the reviewed scope includes the entire descendant tree. Unarchive affects one thread at a time; recovery must unarchive every affected ID. The tool uses native APIs, without directly writing the index or manually moving transcript files.
+
+Read-only auditing supports macOS/Linux with a recognized schema. Native history writes initially require macOS with OS-enforced network denial; unsupported native versions or unrecognized pin/lineage state refuse mutation. Preserve current/pinned/keep-protected descendants: a root cannot bypass their protection.
+
+To recover actual storage, use the separate verified-ZIP and explicitly approved original-removal workflow. Approval to change history visibility does not authorize deleting transcript originals.
+
+The initial native canary used isolated synthetic root/child/grandchild sessions with the installed Codex binary; transcript content SHA-256 values remained unchanged. It is evidence about API behavior in that test, not archiving of real user history or proof of native conversation continuation.
+
+Incomplete index, file or lineage coverage blocks executable native plans while still allowing pressure reports. Native unarchive updates Codex timestamps and file mtime; recovery verifies paths, content and archive state, not original timestamps.
+
 ## Other things you can ask
 
 | What you want | What to tell your AI |
@@ -54,15 +72,32 @@ A broad cleanup request does not approve unseen files. Stop relevant writers bef
 
 ## Supported scope
 
-| Content | v0.2.0 behavior |
+| Content | Current behavior |
 | --- | --- |
 | Codex `log/codex-tui.log`, `logs/codex-tui.log`; Claude `debug/` logs | Old recognized regular files may use approved quarantine and separate purge |
+| Codex native history | Read-only pressure audit; complete-audit and exact-approved native archive/unarchive; macOS Codex 0.154.0; zero disk reclaim |
 | Python `__pycache__/*.pyc` | Requires existing Git-tracked source; cache ignored and untracked |
 | Recognized old main transcripts | Backup first; separate archive plan, exact approval and history-risk acknowledgement before removal |
 | Subagent, sidechain, fork or unknown-origin transcripts; tool results, checkpoints and assets | No source removal; backup-only where supported |
 | Worktrees, source, memories, credentials, databases, unknown objects | No automatic deletion |
 
 See the [CLI guide](docs/cli.md), [compatibility](docs/compatibility.md) and [v0.2.0 evidence record](docs/releases/v0.2.0.md). Keep local reports and recovery data private.
+
+## v0.3.0 history checks
+
+Two different checks ran on 2026-09-21; the native API check used isolated synthetic transcripts.
+
+| Check | Observed result |
+| --- | --- |
+| Real Codex index, read-only | 3,947 threads; 2,862 unarchived, 1,085 archived |
+| Known indexed file sizes | 10,884,095,473 bytes (10.137 GiB); largest 0.989 GiB |
+| Default alerts | Total size and unarchived count triggered; single-file size did not |
+| Incomplete audit | 2,027 missing/unsafe file records, 25 unresolved edges, 884 lineage issues; executable planning refused (exit 2) |
+| Actual native API, synthetic data | 3 related threads archived, individually restored and verified; all 4 original paths/content hashes matched afterward |
+| Approval safeguards | Wrong hash, missing stopped-writer acknowledgement, wrong recovery approval and replay all refused |
+| Real history changed / disk reclaimed | 0 threads / 0 bytes |
+
+[Real read-only evidence](docs/experiments/real-codex-history-v03-2026-09-21.json), [isolated native evidence](docs/experiments/synthetic-native-archive-v03-2026-09-21.json), and [full workflow](docs/history.md). Counts describe that snapshot; coverage gaps overlap and do not prove missing data. No real-user native archival, UI performance benefit or conversation continuation is claimed.
 
 ## v0.2.0 workflow validation
 
@@ -130,4 +165,4 @@ ruff check .
 mypy vibe_cleaner
 ```
 
-All 63 local tests passed, covering the CLI workflow and interrupted recovery. CI runs on macOS/Linux with Python 3.11/3.14; check the [actual workflow results](https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner/actions/workflows/ci.yml). See [release notes](docs/releases/v0.2.0.md), [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md). MIT © 2026 Fireworks.
+Local tests cover the CLI workflow, native history boundaries and interrupted recovery. CI runs on macOS/Linux with Python 3.11/3.14; check the [actual workflow results](https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner/actions/workflows/ci.yml). See [release notes](docs/releases/v0.3.0.md), [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md). MIT © 2026 Fireworks.

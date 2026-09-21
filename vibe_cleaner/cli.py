@@ -11,7 +11,7 @@ import shutil
 import subprocess
 import sys
 
-from . import __version__, backup, engine, jev, sessions
+from . import __version__, backup, engine, history, jev, native_history, sessions
 from .common import Json, Refused, load, write
 from .scan import roots_default, scan
 
@@ -21,6 +21,33 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--version", action="version", version=__version__)
     sub = p.add_subparsers(dest="command", required=True)
     sub.add_parser("doctor", help="Read-only capability report; no network")
+    s = sub.add_parser("history-audit", help="Read-only Codex index count/size pressure; never archive automatically")
+    s.add_argument("--codex-home", type=Path, default=Path(os.getenv("CODEX_HOME", str(Path.home() / ".codex"))))
+    s.add_argument("--total-bytes", type=int, default=3 * history.GIB, help="Total known session bytes; default 3 GiB")
+    s.add_argument("--single-bytes", type=int, default=3 * history.GIB, help="Single session bytes; default 3 GiB")
+    s.add_argument("--count-limit", type=int, default=200, help="Unarchived index count; default 200")
+    s.add_argument("--min-age-days", type=int, default=30)
+    s.add_argument("--keep-recent", type=int, default=100)
+    s.add_argument("--keep-thread", action="append", default=[])
+    s.add_argument("--output", type=Path, required=True)
+    s = sub.add_parser("history-plan", help="Review exact native Codex history archive scope, including descendants")
+    s.add_argument("--audit", type=Path, required=True)
+    s.add_argument("--id", action="append", required=True, help="Selected top-level native thread ID")
+    s.add_argument("--state-dir", type=Path, required=True)
+    s.add_argument("--codex", default="codex")
+    s.add_argument("--ttl-seconds", type=int, default=3600)
+    s.add_argument("--output", type=Path, required=True)
+    s = sub.add_parser("history-apply", help="Native archive of an approved closure; zero disk reclaim")
+    s.add_argument("--plan", type=Path, required=True)
+    s.add_argument("--approve", required=True, help="Exact reviewed plan hash")
+    s.add_argument("--writers-stopped", action="store_true")
+    for name in ("history-verify", "history-restore"):
+        s = sub.add_parser(name)
+        s.add_argument("--state-dir", type=Path, required=True)
+        s.add_argument("--run", required=True)
+        if name == "history-restore":
+            s.add_argument("--approve", required=True, help="unarchive:<run> authorizes this recovery scope")
+            s.add_argument("--writers-stopped", action="store_true")
     s = sub.add_parser("scan", help="Read-only inventory; no transcript contents read")
     s.add_argument("--root", action="append", help="Explicit kind=path (codex, claude, project)")
     s.add_argument("--min-age-days", type=int, default=30)
@@ -101,6 +128,9 @@ def doctor() -> Json:
             "jev_recommended": True,
             "jev_setup": "Inject TYPESAFE_API_KEY from a secret manager or process environment; never paste it in chat",
             "session_deletion": "verified-archive-and-exact-human-approval-required",
+            "native_history": {"audit": "recognized-state_5-schema-only",
+                               "write_contract": "macOS, codex-cli 0.154.0, complete audit, exact approval",
+                               "runtime_verified_this_call": False, "reclaimed_bytes": 0},
             "harness_resume_verified": False, "cross_volume_moves": "disabled",
             "roots": [{"kind": kind, "path": str(path.resolve()), "exists": path.exists()}
                       for kind, path in roots_default()]}
@@ -109,6 +139,24 @@ def doctor() -> Json:
 def execute(a: argparse.Namespace) -> Json:
     if a.command == "doctor":
         return doctor()
+    if a.command == "history-audit":
+        result = history.audit(a.codex_home, total_bytes=a.total_bytes, single_bytes=a.single_bytes,
+                               count_limit=a.count_limit, min_age_days=a.min_age_days,
+                               keep_recent=a.keep_recent, keep_ids=a.keep_thread)
+        write(a.output, result)
+        return {"output": str(a.output), "complete": result["complete"], "thresholds": result["thresholds"],
+                **result["summary"]}
+    if a.command == "history-plan":
+        result = native_history.make_plan(load(a.audit), a.id, a.state_dir, codex=a.codex, ttl=a.ttl_seconds)
+        write(a.output, result)
+        return result
+    if a.command == "history-apply":
+        return native_history.apply(load(a.plan), a.approve, quiescent=a.writers_stopped)
+    if a.command in {"history-verify", "history-restore"}:
+        state = a.state_dir.expanduser().absolute()
+        if a.command == "history-verify":
+            return native_history.verify(state, a.run)
+        return native_history.restore(state, a.run, a.approve, quiescent=a.writers_stopped)
     if a.command == "scan":
         roots = []
         if a.root:

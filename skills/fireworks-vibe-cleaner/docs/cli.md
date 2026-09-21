@@ -8,15 +8,15 @@ If you use this Skill from Codex or Claude Code, start with the prompts in the R
 
 Requires Python 3.11+, macOS or Linux. Mutation of source/quarantine files additionally requires `lsof`; project-bytecode validation requires Git. No runtime Python dependencies, daemon, or default network requests.
 
-Install the v0.2.0 release:
+Install the v0.3.0 release:
 
 ```sh
-git clone --branch v0.2.0 --depth 1 https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner.git
+git clone --branch v0.3.0 --depth 1 https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner.git
 cd fireworks-vibe-cleaner
 python3 scripts/fireworks-vibe-cleaner.py doctor
 ```
 
-Direct script execution needs no package installation. For the shorter `fireworks-vibe-cleaner` command used below, optionally create a virtual environment and run `python -m pip install .`; alternatively replace that command with `python3 scripts/fireworks-vibe-cleaner.py`. During development, use a local checkout and omit the tag clone. Publication and live validation status are recorded in [release notes](releases/v0.2.0.md).
+Direct script execution needs no package installation. For the shorter `fireworks-vibe-cleaner` command used below, optionally create a virtual environment and run `python -m pip install .`; alternatively replace that command with `python3 scripts/fireworks-vibe-cleaner.py`. During development, use a local checkout and omit the tag clone. Publication and live validation status are recorded in [release notes](releases/v0.3.0.md).
 
 To install the Skill, generate the bundle and copy it to the harness you use. These commands intentionally refuse to overwrite an existing installation:
 
@@ -110,3 +110,7 @@ Jev may suggest `keep`, `review`, `backup` or `delete`. `--inspect-activity` per
 
 
 The earlier live Jev measurements do not validate v0.2.0 delete recommendations. A [new live call](experiments/real-jev-v02.json) with the expanded action contract returned review for all 20 candidates; no deletion accuracy claim follows. Real-source cleanup requires approval of its exact plan.
+
+## Codex history list
+
+Use the separate [native history guide](history.md) for count/size pressure, reviewed archive and individual recovery. This promises zero disk reclaim.

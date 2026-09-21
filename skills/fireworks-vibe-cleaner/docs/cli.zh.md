@@ -8,15 +8,15 @@
 
 需要 Python 3.11+，支持 macOS、Linux。修改源文件或隔离文件还需要 `lsof`；项目字节码检查需要 Git。无 Python 运行时第三方依赖，不启动常驻服务，默认不联网。
 
-安装 v0.2.0 发布版：
+安装 v0.3.0 发布版：
 
 ```sh
-git clone --branch v0.2.0 --depth 1 https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner.git
+git clone --branch v0.3.0 --depth 1 https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner.git
 cd fireworks-vibe-cleaner
 python3 scripts/fireworks-vibe-cleaner.py doctor
 ```
 
-直接运行脚本无需安装 Python 包。下文使用简短的 `fireworks-vibe-cleaner` 命令，可选择创建虚拟环境并执行 `python -m pip install .`；也可将该命令替换为 `python3 scripts/fireworks-vibe-cleaner.py`。开发期间使用本地 checkout，跳过标签克隆步骤。实际发布与实测状态见[版本说明](releases/v0.2.0.md)。
+直接运行脚本无需安装 Python 包。下文使用简短的 `fireworks-vibe-cleaner` 命令，可选择创建虚拟环境并执行 `python -m pip install .`；也可将该命令替换为 `python3 scripts/fireworks-vibe-cleaner.py`。开发期间使用本地 checkout，跳过标签克隆步骤。实际发布与实测状态见[版本说明](releases/v0.3.0.md)。
 
 安装 Skill 时先生成目录，再复制到使用的 harness。以下命令拒绝覆盖已有安装：
 
@@ -110,3 +110,7 @@ Jev 可建议 `keep`、`review`、`backup`、`delete`。`--inspect-activity` 执
 
 
 早期 Jev 实测使用旧选项集，不能证明 v0.2.0 删除建议的效果。[扩展选项后的真实调用](experiments/real-jev-v02.json)对 20 个候选全部返回 review，不能据此宣称删除准确率。真实原件清理仍需对具体计划取得人工批准。
+
+## Codex 历史列表
+
+数量与容量提示、确认后原生归档及逐个恢复，见[历史会话指南](history.zh.md)。原生归档预计回收 0 字节。

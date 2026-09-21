@@ -1,0 +1,44 @@
+{
+  "schema": 1,
+  "data": "synthetic-native-archive",
+  "real_user_data_modified": false,
+  "network_calls": 0,
+  "native_runtime": "codex-cli 0.154.0",
+  "platform": "macOS arm64",
+  "transport_mocked": false,
+  "network_denied": true,
+  "other_executables_denied": true,
+  "writes_limited_to_fixture_and_runtime_home": true,
+  "synthetic_threads": 4,
+  "archived_threads": 3,
+  "restored_threads": 3,
+  "archive_verify_passed": true,
+  "restore_verify_passed": true,
+  "all_original_paths_and_content_hashes_match": true,
+  "unrelated_thread_preserved_after_roundtrip": true,
+  "verified_reclaimed_bytes": 0,
+  "harness_resume_verified": false,
+  "refused_cases": [
+    {
+      "case": "wrong-plan-hash",
+      "exit_code": 2
+    },
+    {
+      "case": "missing-writers-stopped",
+      "exit_code": 2
+    },
+    {
+      "case": "wrong-unarchive-approval",
+      "exit_code": 2
+    },
+    {
+      "case": "replay-apply",
+      "exit_code": 2
+    }
+  ],
+  "limits": [
+    "Synthetic transcripts only; this is an actual native API integration check, not real-user archiving or a disk-reclaim benchmark.",
+    "Unarchive updates file and index timestamps.",
+    "UI rendering and conversation continuation are unverified."
+  ]
+}
