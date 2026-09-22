@@ -293,12 +293,14 @@ def render(report: Json, language: str = "zh") -> str:
                 "open": "观察到打开句柄", "pinned": "已置顶", "unpinned": "未置顶",
                 "linked": "有关联", "no_indexed_links": "本次索引未发现关联",
                 "archive-copy": "用户明确接受文件副本恢复", "native-resume": "需要继续原对话",
+                "current": "当前会话", "other": "已知不是当前会话", "old": "超过保留期", "recent": "近期有更新",
             }
             value = facts.get(key, "unknown")
             return labels.get(value, value)
         fact_text = (f"类别={facts['category']}；满足保留期={'是' if facts['retention_met'] else '否'}；"
                      f"备份={fact_label('backup_status')}；活跃={fact_label('activity')}；"
                      f"置顶={fact_label('pin')}；关联={fact_label('links')}；"
+                     f"会话身份={fact_label('current_context')}；索引最近更新={fact_label('recent_use')}；"
                      f"恢复需求={fact_label('recovery_need')}"
                      if zh else json.dumps(facts))
         lines.extend([f"{n}. {path}", f"   {d['size_bytes']} bytes; age={d['age_days']} days; source={d['source']}",
