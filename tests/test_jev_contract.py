@@ -25,6 +25,20 @@ class JevContract(unittest.TestCase):
         with self.assertRaises(Refused):
             jev.validate_response(self.response, self.request)
 
+    def test_two_decimal_rounding_is_bounded_disclosed_and_not_normalized(self):
+        request = copy.deepcopy(self.request)
+        request["questions"]["c0"]["criteria"] = {"a": "first", "b": "second", "c": "third"}
+        data = copy.deepcopy(self.response)
+        data["answers"]["c0"].update(choice="a", probabilities={"a": 0.33, "b": 0.33, "c": 0.33})
+        result = jev.validate_response(data, request)["answers"]["c0"]
+        self.assertTrue(result["probability_rounding_tolerated"])
+        self.assertEqual(result["probabilities"], data["answers"]["c0"]["probabilities"])
+        self.assertAlmostEqual(result["probability_sum"], 0.99)
+        for values in [(0.3, 0.3, 0.3), (0.34, 0.335, 0.32), (0.34, 0.32, 0.32)]:
+            data["answers"]["c0"]["probabilities"] = dict(zip(("a", "b", "c"), values))
+            with self.assertRaises(Refused):
+                jev.validate_response(data, request)
+
     def test_unknown_ids_forbidden_choice_and_bad_usage(self):
         mutations = [lambda d: d["answers"].update({"private-path": {}}),
                      lambda d: d["answers"]["c0"].update({"choice": "purge"}),

@@ -11,7 +11,7 @@ import shutil
 import subprocess
 import sys
 
-from . import __version__, backup, engine, history, jev, native_history, sessions, triage
+from . import __version__, backup, engine, history, jev, native_history, purpose, sessions, triage
 from .common import Json, Refused, load, write
 from .scan import roots_default, scan
 
@@ -122,9 +122,16 @@ def parser() -> argparse.ArgumentParser:
     s.add_argument("--verify-backup-bytes", type=int, default=0,
                    help="Budget for source plus expanded selected member bytes; default 0 checks references only")
     s.add_argument("--skip-activity", action="store_true", help="Keep activity unknown; disables removal preparation")
+    s.add_argument("--advisor", choices=["jev", "rules"], default="jev", help="Rules mode never calls a provider")
+    s.add_argument("--purpose-notes", type=Path, help="Private source-bound closed purpose tags from local review")
+    s.add_argument("--skip-purpose", action="store_true", help="Do not sample session content for structured purpose events")
     s.add_argument("--enable-network", action="store_true")
     s.add_argument("--format", choices=["text", "json"], default="text")
     s.add_argument("--language", choices=["zh", "en"], default="zh")
+    s.add_argument("--output", type=Path, required=True)
+    s = sub.add_parser("purpose-template", help="Prepare source-bound local purpose annotations; no network or cleanup")
+    s.add_argument("--scan", type=Path, required=True)
+    s.add_argument("--id", action="append", required=True)
     s.add_argument("--output", type=Path, required=True)
     return p
 
@@ -229,12 +236,20 @@ def execute(a: argparse.Namespace) -> Json:
         if a.command == "archive-verify":
             return sessions.verify(state, a.run)
         return sessions.restore(state, a.run, quiescent=a.writers_stopped)
+    if a.command == "purpose-template":
+        if a.output.exists() or a.output.is_symlink():
+            raise Refused("Choose a new purpose template output")
+        report = triage.run(load(a.scan), a.id, inspect_activity=False)
+        result = purpose.template(report["decisions"])
+        write(a.output, result)
+        return result
     if a.command == "triage":
         if a.output.exists() or a.output.is_symlink():
             raise Refused("Choose a new triage output file before making provider calls")
         result = triage.run(load(a.scan), a.id, limit=a.limit, goal=a.goal, enabled=a.enable_network,
                             archives=a.archive, max_verify_bytes=a.verify_backup_bytes,
-                            inspect_activity=not a.skip_activity, recovery_need=a.recovery_need)
+                            inspect_activity=not a.skip_activity, recovery_need=a.recovery_need,
+                            purpose_notes=purpose.load_notes(a.purpose_notes), inspect_purpose=not a.skip_purpose, advisor=a.advisor)
         write(a.output, result)
         return result
     if a.command == "advise":

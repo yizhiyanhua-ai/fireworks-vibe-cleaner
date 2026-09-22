@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.0 — 2026-09-22
+
+- Add bounded local purpose observations, source-bound optional annotations and explicit offline rule advice.
+- Show provenance and concrete missing checks; distinguish tentative original-preserving suggestions from cleanup preparation.
+- Hold unknown-purpose new backups for review to avoid speculative storage growth; preserve raw Jev choices.
+- Publish a real rules/metadata/purpose comparison, including failures and lack of demonstrated model superiority.
+- Accept only bounded compatible two-decimal probability rounding, disclose it and retain raw values.
+
 ## 0.5.0 — 2026-09-22
 
 - Add fresh selected Codex index/header and batched activity evidence, with hard protection before Jev calls.

@@ -14,7 +14,7 @@ Use plain language in Codex or Claude Code to inspect coding logs, conversations
 
 ### 1. Install, then configure Jev
 
-> Install fireworks-vibe-cleaner v0.5.0 from https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner into this tool's personal Skill directory. Do not overwrite an existing installation or clean any files. Then help me configure Jev securely.
+> Install fireworks-vibe-cleaner v0.6.0 from https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner into this tool's personal Skill directory. Do not overwrite an existing installation or clean any files. Then help me configure Jev securely.
 
 You need macOS/Linux and Python 3.11+. See the [manual installation guide](docs/cli.md#install). Jev uses `TYPESAFE_API_KEY`, injected through a secret manager or process environment; never paste the key into chat, a report or command history. `doctor` checks whether a key is present, not whether authentication or inference succeeds.
 
@@ -25,6 +25,8 @@ You need macOS/Linux and Python 3.11+. See the [manual installation guide](docs/
 Say what you need to keep: “I need to continue these conversations” or “A verified file copy is enough for these selected sessions.” If you have not decided, the recovery need remains unknown and removal preparation is unavailable. A found backup and a verified backup are different: the cleaner can check selected bytes within a read budget before suggesting reuse. Your recovery preference never approves deletion.
 
 Jev makes a narrow action/reason choice; code does the arithmetic and verification. Eight candidates per batch and up to three concurrent batches keep requests bounded. Metadata cannot establish a conversation's future value. See [evidence, choices and limits](docs/jev.md).
+
+For unclear candidates, ask: “Read only the necessary local snippets and prepare source-bound purpose tags. Tell me which are assistant judgments and which I confirmed. Reuse valid tags; send Jev no excerpts or summaries. Show the next useful step and what still needs checking.” Structured event sampling is bounded to 64 KiB per session. Unknown-purpose files do not receive a new-backup recommendation unless you explicitly chose to preserve history; this avoids adding unexplained copies. You can also request the **offline rules mode**. [Purpose workflow and limits](docs/purpose.md).
 
 ### 2. Inspect and ask for recommendations
 
@@ -86,6 +88,26 @@ Incomplete index, file or lineage coverage blocks executable native plans while 
 | Worktrees, source, memories, credentials, databases, unknown objects | No automatic deletion |
 
 See the [CLI guide](docs/cli.md), [compatibility](docs/compatibility.md) and [v0.2.0 evidence record](docs/releases/v0.2.0.md). Keep local reports and recovery data private.
+
+## v0.6.0: useful purpose evidence, with a rules comparison
+
+The same **14 real files (404,874,193 bytes)** were evaluated using metadata and four locally prepared assistant purpose annotations. Two annotations conservatively identified possible continuation needs. These are fallible judgments from bounded text, not user labels or proof of project status. No text or semantic summary was sent to Jev.
+
+| Final comparison | Rules + purpose | Jev, metadata only | Jev + purpose, repeat 1 / 2 |
+| --- | ---: | ---: | ---: |
+| Local evidence collection | 113 ms | 304 ms | 113 ms, reused for both |
+| Provider / decision time | 0 ms rounded | 1,143 ms | 1,042 / 1,100 ms |
+| Combined measured stage | **113 ms** | **1,447 ms** | **1,155 / 1,213 ms** |
+| Real API calls | 0 | 2 | 1 / 1 |
+| Local keeps / reuse verified copy | 7 / 1 | 5 / 2 | 7 / 1 in both |
+| Verify existing copy / new backup suggestion | 1 / 1 | 1 / 0 | 1 / 1 in both |
+| Needs purpose review | 4 | 6 | 4 in both |
+
+Both purpose runs matched the rule baseline's final reason codes on **14/14** files. This is **not accuracy**, and no advantage over rules was demonstrated. The useful change is source-bound purpose evidence and clearer next steps. Two extra local keeps came from assistant continuation judgments, not Jev. Four raw Jev backup choices lacked purpose evidence and were routed to review locally. One original-preserving suggestion in each purpose run remained tentative; confidence is not deletion safety.
+
+The experiment excludes the first local annotation work and extra source hashes from timing; annotation time/model cost was not measured. Thus 1.16 seconds is not the complete first-use workflow. Nine checked source hashes matched, five protected/dynamic files were not hashed, and **zero bytes were reclaimed**. No human action labels, real Claude transcripts, visual-media understanding or real cleanup were tested.
+
+We retain the initial probability-sum rejection, a diagnostic call and the earlier run that suggested unnecessary new copies. Across all attempts: **11 real calls, 26,635 known input tokens**, estimated known input cost **US$0.00111867** at the [official price](https://docs.typesafe.ai/models); one failed call's usage and billing remain unverified. [Full sanitized evidence](docs/experiments/real-purpose-comparison-2026-09-22.json) · [Reproduction tool](tools/live_purpose_validation.py).
 
 ## v0.5.0: real evidence and decision comparison
 
@@ -208,4 +230,4 @@ ruff check .
 mypy vibe_cleaner
 ```
 
-Local tests cover the CLI workflow, native history boundaries and interrupted recovery. CI runs on macOS/Linux with Python 3.11/3.14; check the [actual workflow results](https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner/actions/workflows/ci.yml). See [release notes](docs/releases/v0.5.0.md), [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md). MIT © 2026 Fireworks.
+Local tests cover the CLI workflow, native history boundaries and interrupted recovery. CI runs on macOS/Linux with Python 3.11/3.14; check the [actual workflow results](https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner/actions/workflows/ci.yml). See [release notes](docs/releases/v0.6.0.md), [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md). MIT © 2026 Fireworks.

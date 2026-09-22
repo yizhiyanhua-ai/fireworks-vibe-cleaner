@@ -117,12 +117,20 @@ def validate_response(data: Any, request: Json) -> Json:
         values = [*p.values(), answer.get("confidence")]
         if not all(type(v) in (int, float) and math.isfinite(v) and 0 <= v <= 1 for v in values):
             raise Refused("Invalid probability/confidence range")
-        if abs(sum(p.values()) - 1) > 0.001:
+        total = math.fsum(p.values())
+        rounding_applied = abs(total - 1) > 0.001
+        # Live responses expose probabilities to two decimal places. Accept only
+        # sums compatible with rounding each value to that precision; retain raw
+        # values and disclose tolerance instead of renormalizing or hiding it.
+        two_decimals = all(abs(v * 100 - round(v * 100)) < 1e-8 for v in p.values())
+        rounding_bound = min(0.025, 0.005 * len(p))
+        if rounding_applied and (not two_decimals or abs(total - 1) > rounding_bound + 1e-9):
             raise Refused("Probabilities do not sum to one")
         if p[answer["choice"]] < max(p.values()):
             raise Refused("Choice does not match the highest probability")
         sanitized[key] = {"type": "choice", "choice": answer["choice"], "probabilities": p,
-                          "confidence": answer["confidence"]}
+                          "confidence": answer["confidence"], "probability_sum": total,
+                          "probability_rounding_tolerated": rounding_applied}
     usage = data.get("usage")
     if not isinstance(usage, dict) or any(type(usage.get(k)) is not int or usage[k] < 0
                                            for k in ("input_tokens", "output_tokens")):

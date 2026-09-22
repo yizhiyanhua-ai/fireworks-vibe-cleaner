@@ -8,15 +8,15 @@
 
 需要 Python 3.11+，支持 macOS、Linux。修改源文件或隔离文件还需要 `lsof`；项目字节码检查需要 Git。无 Python 运行时第三方依赖，不启动常驻服务，默认不联网。
 
-安装 v0.5.0 发布版：
+安装 v0.6.0 发布版：
 
 ```sh
-git clone --branch v0.5.0 --depth 1 https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner.git
+git clone --branch v0.6.0 --depth 1 https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner.git
 cd fireworks-vibe-cleaner
 python3 scripts/fireworks-vibe-cleaner.py doctor
 ```
 
-直接运行脚本无需安装 Python 包。下文使用简短的 `fireworks-vibe-cleaner` 命令，可选择创建虚拟环境并执行 `python -m pip install .`；也可将该命令替换为 `python3 scripts/fireworks-vibe-cleaner.py`。开发期间使用本地 checkout，跳过标签克隆步骤。实际发布与实测状态见[版本说明](releases/v0.5.0.md)。
+直接运行脚本无需安装 Python 包。下文使用简短的 `fireworks-vibe-cleaner` 命令，可选择创建虚拟环境并执行 `python -m pip install .`；也可将该命令替换为 `python3 scripts/fireworks-vibe-cleaner.py`。开发期间使用本地 checkout，跳过标签克隆步骤。实际发布与实测状态见[版本说明](releases/v0.6.0.md)。
 
 安装 Skill 时先生成目录，再复制到使用的 harness。以下命令拒绝覆盖已有安装：
 
@@ -106,7 +106,7 @@ fireworks-vibe-cleaner triage --scan scan.json --limit 40 --goal balanced --enab
 
 不联网时去掉 `--enable-network`，结果明确标为本地复核。默认只选支持类别中最大的 40 个候选；可以使用 `--limit 1..100`，或重复 `--id CANDIDATE_ID` 覆盖你选定的完整集合（最多 100 项）。目标可选 `balanced`（综合考虑）、`reclaim-space`（优先腾空间）、`preserve-history`（优先保留历史）。
 
-终端直接显示每个文件、动作、理由、事实、备选方式和未知项；JSON 留在本地供复核。`backup` 保留原件，`prepare_removal` 只建议准备“验证备份后移除”的方案，`prepare_cache_cleanup` 只建议准备日志/缓存隔离与另行批准的销毁方案。这一步不生成可执行计划、没有回收空间。Jev 原始建议和低 confidence 转人工复核均留有记录。
+终端直接显示每个文件、动作、理由、事实、备选方式和未知项；JSON 留在本地供复核。`backup` 保留原件，`prepare_removal` 只建议准备“验证备份后移除”的方案，`prepare_cache_cleanup` 只建议准备日志/缓存隔离与另行批准的销毁方案。这一步不生成可执行计划、没有回收空间。Jev 原始建议、本地覆盖和置信度均留有记录；低于 0.5 的保留原件建议标为暂定，清理准备转人工复核。
 
 范围确定后再做完整哈希和保护/活跃检查；在聊天中显示完整清单、每项方法及原因、影响、备份位置、计划 hash，经人工明确确认才进入后面的执行命令。只给 MD 链接不够。[能力依据、调用上限与限制](jev.md)。
 
@@ -117,6 +117,8 @@ fireworks-vibe-cleaner triage --scan scan.json --limit 40 --goal balanced --enab
 ```
 
 `--archive` 可重复；默认验证预算为零，只识别备份清单引用。预算上限 32 GiB，累计原件与所选成员解压后的字节，不按 ZIP 大小计，也不代表整个归档或原生续聊验证通过。用户明确说文件副本足够时才用 `--recovery-need archive-copy`；需要继续原对话用 `native-resume`，未说明则保持 `unknown`，后二者均关闭移除准备选项。这个偏好不批准删除。默认批量检查打开句柄，`--skip-activity` 会使活动状态未知。`verify_backup` 表示建议验证已有副本，`reuse_verified_backup` 表示保留原件并复用所选已验证副本。受保护、当前、关联、置顶或观察到打开句柄的对象直接本地保留；缺失索引证据保持未知。
+
+用途信息：`purpose-template --scan scan.json --id ID --output purpose-notes.json` 生成绑定来源的私有模板，可重复 ID。本地查看后仅填写固定用途、续接需求和来源，再给 triage 加 `--purpose-notes purpose-notes.json`。默认每会话最多读取 64 KiB 结构信息，`--skip-purpose` 可关闭；`--advisor rules` 使用离线规则。过期标注会在联网前拒绝。[完整用途流程、固定选项与计时边界](purpose.md)。
 
 ## 单次 Jev 建议（兼容命令）
 

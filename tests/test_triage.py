@@ -267,11 +267,11 @@ class TriageContract(unittest.TestCase):
             else:
                 self.assertNotIn("prepare_verified_removal", actions)
 
-    def test_backup_suggestion_is_not_execution_and_default_never_hashes(self):
+    def test_backup_suggestion_is_not_execution_and_default_never_full_hashes(self):
         self.transcript()
         inv = self.inventory()
         with self.no_hash_or_mutation():
-            result = triage.run(inv, enabled=True, transport=self.transport("backup_preserve_history"))
+            result = triage.run(inv, goal="preserve-history", enabled=True, transport=self.transport("backup_preserve_history"))
         self.nonexecuting(result)
         self.assertEqual(result["decisions"][0]["action"], "backup")
         self.assertEqual(result["decisions"][0]["reason_code"], "backup_preserve_history")
@@ -306,7 +306,7 @@ class TriageContract(unittest.TestCase):
         self.assertGreater(len(self.calls), 1)
         self.assertLess(len(self.calls), 40)
 
-    def test_low_confidence_degrades_to_review_and_provider_text_is_discarded(self):
+    def test_tentative_backup_keeps_originals_and_provider_text_is_discarded(self):
         self.transcript()
         def transport(request, timeout):
             parsed = json.loads(request.data)
@@ -316,12 +316,48 @@ class TriageContract(unittest.TestCase):
             for answer in result["answers"].values():
                 answer["explanation"] = self.secret
             return result
-        result = triage.run(self.inventory(), enabled=True, transport=transport)
+        result = triage.run(self.inventory(), goal="preserve-history", enabled=True, transport=transport)
         self.nonexecuting(result)
-        self.assertEqual(result["decisions"][0]["action"], "review")
-        self.assertEqual(result["decisions"][0]["reason_code"], "review_uncertain")
+        self.assertEqual(result["decisions"][0]["action"], "backup")
+        self.assertEqual(result["decisions"][0]["source"], "jev-tentative")
         self.assertNotIn(self.secret, json.dumps(result))
         self.assertNotIn(self.secret, triage.render(result, language="zh"))
+
+    def test_unknown_purpose_backup_stays_raw_but_not_primary_recommendation(self):
+        self.transcript()
+        result = triage.run(self.inventory(), enabled=True, transport=self.transport("backup_preserve_history", 1.0))
+        row = result["decisions"][0]
+        self.assertEqual(row["provider_choice"], "backup_preserve_history")
+        self.assertEqual(row["action"], "review")
+        self.assertEqual(row["source"], "local-purpose-review")
+        self.assertIn("review-local-purpose", row["next_checks"])
+        self.nonexecuting(result)
+
+    def test_low_confidence_cleanup_preparation_still_routes_to_review(self):
+        self.transcript()
+        inv = self.inventory()
+        rows = triage.evidence(inv["items"], inv)
+        rows[0]["facts"].update(backup_status="selected_bytes_verified", recovery_need="archive-copy",
+                                pin="unpinned", links="no_indexed_links", recent_use="old",
+                                current_context="other", activity="no_open_handles")
+        result = triage.decide(rows, enabled=True, transport=self.transport("prepare_verified_removal", 0.49))
+        self.assertEqual(result["decisions"][0]["action"], "review")
+        self.assertEqual(result["decisions"][0]["source"], "jev-low-confidence")
+        self.assertFalse(result["decisions"][0]["executable"])
+
+    def test_explicit_rules_mode_uses_purpose_and_never_networks(self):
+        self.transcript()
+        inv = self.inventory()
+        rows = triage.evidence(inv["items"], inv)
+        from vibe_cleaner import purpose
+        notes = purpose.template(rows)
+        notes["notes"][0].update(role="knowledge-reference", origin="local-assistant")
+        result = triage.run(inv, advisor="rules", enabled=True, purpose_notes=notes,
+                            transport=lambda *a: self.fail("rules mode called network"))
+        self.assertEqual(result["provider"]["calls"], 0)
+        self.assertEqual(result["decisions"][0]["action"], "backup")
+        self.assertEqual(result["decisions"][0]["source"], "local-rules")
+        self.nonexecuting(result)
 
     def test_disabled_or_missing_key_does_not_call_transport(self):
         self.transcript()

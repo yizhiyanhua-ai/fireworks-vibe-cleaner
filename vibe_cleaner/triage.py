@@ -15,14 +15,14 @@ import time
 from typing import Any, Callable
 import urllib.request
 
-from . import jev, sessions, triage_evidence
+from . import jev, purpose, sessions, triage_evidence
 from .common import Json, Refused, candidate_fd
 from .scan import transcript_id
 
 MAX_CANDIDATES = 100
 BATCH_SIZE = 8
 MAX_WORKERS = 3
-CONFIDENCE_FLOOR = 0.5  # Conservative routing rule, not an empirically calibrated safety threshold.
+CONFIDENCE_FLOOR = 0.5  # Preparation advice only; not calibrated deletion safety.
 GOALS = {"balanced", "reclaim-space", "preserve-history"}
 
 # Every choice binds an action to a reason supported by local facts. These are
@@ -32,7 +32,7 @@ OPTIONS = {
                        "本地保护，保留不动", "命中保护、活跃或关联条件，本地规则已排除清理"),
     "keep_in_place": ("keep", "Retain the original; no change is justified by the available facts.",
                       "保留原件", "现有事实不足以证明需要变更，保留现状"),
-    "review_uncertain": ("review", "Defer: the user's recovery needs or necessary safety facts are unknown.",
+    "review_uncertain": ("review", "Defer only when evidence needed for the next step is missing. Unknown recovery need blocks removal, not backup verification or preserving originals.",
                          "待人工判断", "使用需求或必要条件仍不明确，先确认再定处理方式"),
     "backup_preserve_history": ("backup", "Preserve potentially valuable history: create or reuse a verified backup and keep the original.",
                                 "备份并保留原件", "内容可能仍有价值，建立或复用校验通过的备份，同时保留原件"),
@@ -49,7 +49,8 @@ OPTIONS = {
 
 def evidence(items: list[Json], inventory: Json, *, archives: list[Path] | None = None,
              max_verify_bytes: int = 0, inspect_activity: bool = False,
-             recovery_need: str = "unknown", details: Json | None = None) -> list[Json]:
+             recovery_need: str = "unknown", details: Json | None = None,
+             purpose_notes: Json | None = None, inspect_purpose: bool = True) -> list[Json]:
     """Fresh bounded facts. Selected backup bytes are checked only within an explicit budget."""
     if recovery_need not in triage_evidence.RECOVERY_NEEDS:
         raise Refused("Unknown user recovery preference")
@@ -97,6 +98,16 @@ def evidence(items: list[Json], inventory: Json, *, archives: list[Path] | None 
         }
         rows.append({"id": item["id"], "path": str(Path(item["root"]) / item["relative"]),
                      "size_bytes": size, "age_days": round(age, 1), "facts": facts, "index_evidence": index})
+    purpose_start = time.monotonic()
+    cards = purpose.collect(checked, {r["id"] for r in rows if r["facts"]["protected"]},
+                            notes=purpose_notes, enabled=inspect_purpose)
+    for row in rows:
+        card = cards[row["id"]]
+        row["purpose_evidence"] = card
+        row["facts"].update(purpose.provider_facts(card))
+        if purpose.keep_needed(row["facts"]) or card["coverage"] == "unavailable":
+            row["facts"].update(protected=True, backup_candidate=False, disposable_policy_checked=False)
+    purpose_ms = round((time.monotonic() - purpose_start) * 1000)
     backup_start = time.monotonic()
     backup_ids = {row["id"] for row in rows if row["facts"]["backup_candidate"]}
     backup_evidence = triage_evidence.backups([i for i in checked if i["id"] in backup_ids], archives or [],
@@ -106,7 +117,8 @@ def evidence(items: list[Json], inventory: Json, *, archives: list[Path] | None 
         row["facts"]["backup_status"] = proof["status"]
         row["backup_evidence"] = proof
     if details is not None:
-        details.update(index_and_policy_ms=index_ms, activity_ms=activity_ms,
+        details.update(index_and_policy_ms=index_ms, activity_ms=activity_ms, purpose_ms=purpose_ms,
+                       purpose_read_bytes=sum(c["bytes_read"] for c in cards.values()),
                        backup_ms=round((time.monotonic() - backup_start) * 1000),
                        backup={k: v for k, v in backup_evidence.items() if k != "items"},
                        recovery_need=recovery_need, inspected_activity=inspect_activity,
@@ -117,7 +129,7 @@ def evidence(items: list[Json], inventory: Json, *, archives: list[Path] | None 
 def allowed(facts: Json) -> list[str]:
     keys = ["keep_in_place", "review_uncertain"]
     category = facts["category"]
-    if (facts["protected"] or category in {"protected", "worktree"} or facts.get("pin") == "pinned"
+    if (facts["protected"] or purpose.keep_needed(facts) or category in {"protected", "worktree"} or facts.get("pin") == "pinned"
             or facts.get("links") == "linked" or facts.get("activity") == "open"
             or facts.get("current_context") == "current"):
         return keys
@@ -126,12 +138,12 @@ def allowed(facts: Json) -> list[str]:
         keys.append("reuse_verified_backup" if verified else "backup_preserve_history")
         if facts.get("backup_status") == "manifest_only":
             keys.append("verify_existing_backup")
-    if (category == "session" and facts["old_main_header_recognized"] and facts["retention_met"] and verified
+    if (category == "session" and facts.get("plan_event") != "pending-plan-seen" and facts["old_main_header_recognized"] and facts["retention_met"] and verified
             and facts.get("recovery_need") == "archive-copy" and facts.get("pin") == "unpinned"
             and facts.get("links") == "no_indexed_links" and facts.get("recent_use") == "old"
             and facts.get("current_context") == "other" and facts.get("activity") == "no_open_handles"):
         keys.append("prepare_verified_removal")
-    if (category in {"log", "bytecode"} and facts["disposable_policy_checked"] and facts["retention_met"]
+    if (category in {"log", "bytecode"} and facts.get("plan_event") != "pending-plan-seen" and facts["disposable_policy_checked"] and facts["retention_met"]
             and facts.get("activity") == "no_open_handles"):
         keys.append("prepare_disposable_cleanup")
     return keys
@@ -161,12 +173,19 @@ def packet(rows: list[Json], goal: str = "balanced") -> Json:
             "recent_use": enum("recent_use", {"old", "recent"}),
             "current_context": enum("current_context", {"current", "other"}),
             "recovery_need": enum("recovery_need", triage_evidence.RECOVERY_NEEDS), "future_use": "unknown",
+            "purpose_role": enum("purpose_role", purpose.ROLES),
+            "purpose_origin": enum("purpose_origin", purpose.ORIGINS),
+            "continuation": enum("continuation", purpose.CONTINUATION),
+            "purpose_coverage": enum("purpose_coverage", purpose.COVERAGE),
+            "turn_event": enum("turn_event", purpose.TURN_EVENTS), "plan_event": enum("plan_event", purpose.PLAN_EVENTS),
         })
     questions = {f"c{n}": {
         "type": "choice",
         "instructions": f"For state.candidates[{n}] only, choose the next step for goal '{goal}'. "
-                        "Unknown facts remain unknown. Advice never authorizes execution. "
-                        "Old/large does not mean worthless. Choose review_uncertain if needed evidence is missing.",
+                        "Pick a useful next step that retains originals whenever removal is unavailable. "
+                        "Unknown recovery need only blocks removal. A turn completion is not project completion; "
+                        "purpose tags are source-bound judgments, not verified value or deletion approval. "
+                        "Do not infer unused or worthless from old/large. Review only if the next step lacks necessary evidence.",
         "criteria": {key: OPTIONS[key][1] for key in allowed(f)},
     } for n, f in enumerate(candidates)}
     return {"model": "jev-latest", "state": {"candidates": candidates}, "questions": questions}
@@ -175,9 +194,10 @@ def packet(rows: list[Json], goal: str = "balanced") -> Json:
 def run(inventory: Json, ids: list[str] | None = None, *, limit: int = 40, goal: str = "balanced",
         enabled: bool = False, archives: list[Path] | None = None, max_verify_bytes: int = 0,
         inspect_activity: bool = True, recovery_need: str = "unknown",
+        purpose_notes: Json | None = None, inspect_purpose: bool = True, advisor: str = "jev",
         transport: Callable[[urllib.request.Request, float], Any] | None = None) -> Json:
     started = time.monotonic()
-    if goal not in GOALS or not 1 <= limit <= MAX_CANDIDATES:
+    if goal not in GOALS or advisor not in {"jev", "rules"} or not 1 <= limit <= MAX_CANDIDATES:
         raise Refused("Triage needs a supported goal and a limit of 1..100")
     if ids is not None:
         if not 1 <= len(ids) <= MAX_CANDIDATES or len(set(ids)) != len(ids):
@@ -191,9 +211,10 @@ def run(inventory: Json, ids: list[str] | None = None, *, limit: int = 40, goal:
                        key=lambda i: i["identity"]["size"], reverse=True)[:limit]
     details: Json = {}
     rows = evidence(items, inventory, archives=archives, max_verify_bytes=max_verify_bytes,
-                    inspect_activity=inspect_activity, recovery_need=recovery_need, details=details)
+                    inspect_activity=inspect_activity, recovery_need=recovery_need, details=details,
+                    purpose_notes=purpose_notes, inspect_purpose=inspect_purpose)
     evidence_ms = round((time.monotonic() - started) * 1000)
-    evaluated = decide(rows, goal=goal, enabled=enabled, transport=transport)
+    evaluated = rules(rows, goal=goal) if advisor == "rules" else decide(rows, goal=goal, enabled=enabled, transport=transport)
     return {"schema": 2, "kind": "triage-advice", "goal": goal, "executable": False,
             "actual_reclaimed_bytes": 0, "confidence_floor": CONFIDENCE_FLOOR,
             "scan_complete": inventory.get("complete", False), "inventory_files": len(inventory["items"]),
@@ -211,8 +232,9 @@ def decide(rows: list[Json], *, goal: str = "balanced", enabled: bool = False,
     """Evaluate prepared facts without IO/mutation authority; useful for frozen-request comparisons."""
     if goal not in GOALS or len(rows) > MAX_CANDIDATES or len({r["id"] for r in rows}) != len(rows):
         raise Refused("Invalid prepared candidate set")
-    protected = [r for r in rows if r["facts"]["protected"]]
-    reviewable = [r for r in rows if not r["facts"]["protected"]]
+    protected = [r for r in rows if r["facts"]["protected"] or purpose.keep_needed(r["facts"])]
+    protected_ids = {r["id"] for r in protected}
+    reviewable = [r for r in rows if r["id"] not in protected_ids]
     batches = [reviewable[n:n + BATCH_SIZE] for n in range(0, len(reviewable), BATCH_SIZE)]
     requests = [packet(batch, goal) for batch in batches]
     payload_sizes = [len(json.dumps(p).encode()) for p in requests]
@@ -243,20 +265,27 @@ def decide(rows: list[Json], *, goal: str = "balanced", enabled: bool = False,
             choices = request["questions"][f"c{n}"]["criteria"]
             answer = reply.get("answers", {}).get(f"c{n}")
             choice = answer["choice"] if answer else "review_uncertain"
-            overridden = bool(answer and answer["confidence"] < CONFIDENCE_FLOOR)
-            if overridden:
+            purpose_missing = (choice == "backup_preserve_history" and goal != "preserve-history"
+                               and row["facts"].get("purpose_role", "unknown") == "unknown")
+            low = bool(answer and answer["confidence"] < CONFIDENCE_FLOOR)
+            overridden = low and OPTIONS[choice][0] in {"prepare_removal", "prepare_cache_cleanup"}
+            tentative = low and not overridden and not purpose_missing and choice != "review_uncertain"
+            if overridden or purpose_missing:
                 choice = "review_uncertain"
             decisions.append({**row, "action": OPTIONS[choice][0], "reason_code": choice,
-                              "source": "jev-low-confidence" if overridden else "jev" if answer else "local-fallback",
+                              "source": "local-purpose-review" if purpose_missing else "jev-low-confidence" if overridden else "jev-tentative" if tentative else "jev" if answer else "local-fallback",
                               "provider_status": reply["status"], "provider_choice": answer["choice"] if answer else None,
                               "confidence": answer["confidence"] if answer else None,
                               "probabilities": answer["probabilities"] if answer else {},
+                              "probability_rounding_tolerated": answer.get("probability_rounding_tolerated", False) if answer else False,
                               "alternatives": list(choices), "executable": False,
+                              "next_checks": purpose.next_checks(row["facts"]),
                               "required_next": "Fresh protection/activity checks, verified backup if transcript removal, exact plan and human approval"})
     for row in protected:
         decisions.append({**row, "action": "keep", "reason_code": "keep_protected", "source": "local-protection",
                           "provider_status": "not-called-local-protection", "provider_choice": None, "confidence": None,
                           "probabilities": {}, "alternatives": ["keep_protected"], "executable": False,
+                          "next_checks": purpose.next_checks(row["facts"]),
                           "required_next": "Retain; do not prepare a cleanup plan for a protected object"})
     indexed_decisions = {d["id"]: d for d in decisions}
     return {"decisions": [indexed_decisions[r["id"]] for r in rows], "provider_wall_ms": provider_wall_ms,
@@ -264,10 +293,45 @@ def decide(rows: list[Json], *, goal: str = "balanced", enabled: bool = False,
                          "max_concurrency": MAX_WORKERS, "request_bytes": sum(payload_sizes),
                          "locally_protected_files": len(protected),
                          "statuses": dict(Counter(r["status"] for r in replies)),
+                         "rounded_distributions": sum(a.get("probability_rounding_tolerated", False) for r in replies for a in r.get("answers", {}).values()),
                          "errors": dict(Counter(r["error_code"] for r in replies if "error_code" in r)),
                          "models": sorted({r["model"] for r in replies if "model" in r}),
                          "input_tokens": sum(r.get("usage", {}).get("input_tokens", 0) for r in replies),
                          "output_tokens": sum(r.get("usage", {}).get("output_tokens", 0) for r in replies)}}
+
+
+
+def rules(rows: list[Json], *, goal: str = "balanced") -> Json:
+    """Transparent comparison baseline and explicit offline mode, not ground truth."""
+    if goal not in GOALS or len(rows) > MAX_CANDIDATES:
+        raise Refused("Invalid rules triage selection")
+    decisions = []
+    for row in rows:
+        facts = row["facts"]
+        options = allowed(facts)
+        choice = "review_uncertain"
+        protected = facts["protected"] or purpose.keep_needed(facts)
+        if protected:
+            choice, options = "keep_protected", ["keep_protected"]
+        elif goal == "reclaim-space" and "prepare_verified_removal" in options:
+            choice = "prepare_verified_removal"
+        elif "reuse_verified_backup" in options:
+            choice = "reuse_verified_backup"
+        elif "verify_existing_backup" in options:
+            choice = "verify_existing_backup"
+        elif facts.get("purpose_role") in purpose.ROLES - {"unknown"} and "backup_preserve_history" in options:
+            choice = "backup_preserve_history"
+        elif "prepare_disposable_cleanup" in options:
+            choice = "prepare_disposable_cleanup"
+        decisions.append({**row, "action": OPTIONS[choice][0], "reason_code": choice,
+                          "source": "local-protection" if protected else "local-rules", "provider_status": "not-called-rules",
+                          "provider_choice": None, "confidence": None, "probabilities": {}, "alternatives": options,
+                          "executable": False, "next_checks": purpose.next_checks(facts),
+                          "required_next": "Advice only; exact plan and human approval before any cleanup"})
+    return {"decisions": decisions, "provider_wall_ms": 0,
+            "provider": {"calls": 0, "batches": 0, "max_concurrency": 0, "request_bytes": 0,
+                         "locally_protected_files": sum(d["source"] == "local-protection" for d in decisions),
+                         "statuses": {"local-rules": len(rows)}, "errors": {}, "models": [], "input_tokens": 0, "output_tokens": 0}}
 
 
 def render(report: Json, language: str = "zh") -> str:
@@ -309,9 +373,36 @@ def render(report: Json, language: str = "zh") -> str:
                       f"   {'本地事实' if zh else 'Facts'}: {fact_text}",
                       f"   {'备选' if zh else 'Alternatives'}: " + " / ".join(
                           OPTIONS[k][2] if zh else OPTIONS[k][0] for k in d["alternatives"] if k != d["reason_code"])])
+        purpose_names = {"unknown": "用途未知", "knowledge-reference": "知识参考", "implementation-history": "实现历史",
+                         "diagnostic-history": "排障记录", "delivery-record": "交付过程记录", "generated-draft": "生成草稿", "deliverable": "交付素材"}
+        origin_names = {"unreviewed": "尚未判断", "local-assistant": "本地助手判断，非用户确认", "user": "用户提供的用途判断"}
+        next_names = {"review-observed-pending-plan-before-removal": "移除前核实记录中未完成的计划是否已结束",
+                      "retain-and-resolve-protection": "保留；先处理保护或继续使用的需求",
+                      "verify-existing-backup-bytes": "先核验已有备份字节，避免重复备份",
+                      "review-local-purpose": "补充本地用途判断",
+                      "ask-resume-or-file-copy-before-removal": "准备移除前确认：继续对话，还是文件副本即可",
+                      "check-project-references-before-any-removal": "检查项目引用；当前素材不支持移除",
+                      "refresh-open-handle-check-before-cleanup": "清理前重新检查打开句柄"}
+        if zh:
+            coverage_names = {"unknown": "未知", "not-read": "未读正文", "full": "按预算读取完整小文件",
+                              "head-tail": "仅读取首尾", "partial": "部分记录未能解析", "unavailable": "来源不可用"}
+            event_names = {"unknown": "未观察到", "completion-event-seen": "记录了本轮结束", "interruption-event-seen": "记录了中止",
+                           "start-event-seen": "记录了开始", "pending-plan-seen": "观察到未完成计划", "completed-plan-seen": "记录了计划完成声明"}
+            lines.append("   用途依据: " + purpose_names.get(facts.get("purpose_role"), "用途未知") + "；" +
+                         origin_names.get(facts.get("purpose_origin"), "尚未判断") +
+                         f"；采样={coverage_names.get(facts.get('purpose_coverage'), '未知')}；轮次={event_names.get(facts.get('turn_event'), '未观察到')}；"
+                         f"计划={event_names.get(facts.get('plan_event'), '未观察到')}（均不代表项目完成）")
+        checks = d.get("next_checks", [])
+        if checks:
+            lines.append(("   下一步补查: " if zh else "   Next checks: ") + " / ".join(next_names[k] if zh else k for k in checks))
         backup = d.get("backup_evidence", {})
         if backup.get("archive"):
             lines.append(f"   {'备份位置' if zh else 'Backup location'}: " + json.dumps(backup["archive"], ensure_ascii=True))
+        if d["source"] == "local-purpose-review":
+            lines.append("   Jev 倾向新增备份，但用途依据缺失；先补用途，避免增加无必要占用" if zh else
+                         "   Jev suggested a new backup, but purpose is unknown; review purpose before adding storage")
+        if d["source"] == "jev-tentative":
+            lines.append(f"   confidence={d['confidence']}; " + ("置信度偏低，仅作为保留原件的可选建议，不自动执行" if zh else "Low confidence: tentative original-preserving suggestion; never automatic execution"))
         if d["source"] == "jev-low-confidence":
             provider_option = OPTIONS[d["provider_choice"]]
             lines.append(f"   Jev: {provider_option[2] if zh else provider_option[0]}; "

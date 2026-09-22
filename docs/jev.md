@@ -27,7 +27,7 @@ Jev does not generate prose. Its documented weak areas include arithmetic, dates
 
 Preparation is conditional advice, never a statement that a file is safe to delete. A header alone does not establish complete format validity, absence of index relationships, stopped writers, backup recovery or future user value. Native history archival is a separate list-management operation with no promised disk reclaim. Backup and deletion remain separate decisions.
 
-For partial failures, only the affected candidates fall back to local review. Each result keeps its provider status and source label. Choice probabilities and confidence are preserved in the private JSON. A confidence below 0.5 routes to review; this is a conservative product rule, not a domain-calibrated safety threshold. High confidence also needs the same verification and exact human approval. [Official confidence explanation](https://docs.typesafe.ai/confidence).
+For partial failures, only the affected candidates fall back to local review. Each result keeps its provider status and source label. Choice probabilities and confidence are preserved in the private JSON. Cleanup-preparation confidence below 0.5 routes to review. Original-preserving advice below it is explicitly tentative. Unknown-purpose new backups are held for purpose review unless preserve-history was explicitly selected. These are product rules, not domain-calibrated safety thresholds. High confidence also needs the same verification and exact human approval. [Official confidence explanation](https://docs.typesafe.ai/confidence).
 
 ## Evidence bounds and recovery need
 
@@ -36,6 +36,10 @@ For partial failures, only the affected candidates fall back to local review. Ea
 Backup checking accepts up to 64 explicitly supplied archives and 16 MiB of manifest metadata. The optional verification budget caps at 32 GiB and counts the source plus expanded selected member, usually twice the selected source size; metadata and compressed I/O are outside this logical budget. It checks identities, selected member bytes, SHA-256 and CRC, not the whole ZIP or native resume. Duplicate references, corrupt bytes and changed identities cannot become verified. A failed selected-member check does not mark other members verified. No match among supplied archives does not mean no backups exist elsewhere.
 
 Index lookup is bounded to 100 selected files, recognized schemas and at most 1,000 incident edges with a query deadline. No indexed links is a scoped observation, not complete lineage proof. Missing schemas/rows, unsupported adapters, bad paths/times or failed checks leave unknown facts. The full-plan workflow remains necessary.
+
+## Purpose context and transparent rules
+
+[v0.6 purpose evidence](purpose.md) adds bounded structured observations and optional source-bound local annotations. The provider receives fixed tags only; a local assistant's inference is not user truth. Missing recovery needs prohibit removal, while existing backups can still be verified/reused. Unknown-purpose new copies stay pending purpose review, preventing speculative archive growth. `--advisor rules` provides the same deterministic evidence without provider calls. The real comparison found matching final rule/Jev choices, not a model advantage.
 
 ## Bounds and measurement
 
@@ -51,4 +55,4 @@ Jev 是筛选建议的优先入口：本地代码先取事实，Jev 批量选择
 
 “备份”保留原件；“验证已有备份”先检查已有副本，避免重复备份。只有所选备份字节验证通过，用户明确接受文件副本恢复，且置顶/关联/近期使用/当前会话/打开句柄等事实符合条件，才开放“准备移除方案”；执行仍须完整计划校验和人工确认。恢复需求默认未知，需要续聊时也不能用字节备份替代。两者不能合并成默认删除。元数据无法证明会话内容无用；年龄大、体积大、已归档都只是事实。未提供正文或用途证据时，不能宣称 Jev 理解了这些会话的价值。
 
-默认先分析最大的 40 个候选；明确指定 ID 时最多 100 个，每批 8 个、最多 3 批并发。缺 Key、调用失败和低 confidence 都会明确标识，不隐藏成 Jev 的最终意见。0.5 阈值只是保守分流规则，任何 confidence 都不能替代人工确认。默认检查所选活动与索引；备份字节验证默认预算为零，可按需开启。只核验明确提供的归档与所选成员，完整计划校验仍在范围确认后进行。
+默认先分析最大的 40 个候选；明确指定 ID 时最多 100 个，每批 8 个、最多 3 批并发。缺 Key、调用失败和低 confidence 都会明确标识。低于 0.5 的保留原件建议标为暂定，清理准备转复核；未知用途的新增备份另需补用途。任何 confidence 都不能替代人工确认。默认检查所选活动与索引；备份字节验证默认预算为零，可按需开启。只核验明确提供的归档与所选成员，完整计划校验仍在范围确认后进行。
