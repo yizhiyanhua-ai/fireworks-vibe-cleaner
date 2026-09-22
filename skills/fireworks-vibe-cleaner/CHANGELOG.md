@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.0 — 2026-09-22
+
+- Add fresh selected Codex index/header and batched activity evidence, with hard protection before Jev calls.
+- Distinguish existing backup references, per-file byte verification and reusable verified copies within explicit read budgets.
+- Keep recovery requirements unknown by default; require all evidence gates and explicit archive-copy preference before removal-preparation advice.
+- Publish the real heterogeneous comparison, its initial failed batch and its limits; no cleanup or model-accuracy claim.
+- Handle corrupt compressed members individually and expose fixed, secret-safe provider failure codes.
+
 ## 0.4.0 — 2026-09-22
 
 - Add Jev-first `triage`: bounded parallel batches, joint action/reason choices, per-file terminal explanations and alternatives.

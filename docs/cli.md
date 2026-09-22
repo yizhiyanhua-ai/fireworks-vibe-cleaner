@@ -8,15 +8,15 @@ If you use this Skill from Codex or Claude Code, start with the prompts in the R
 
 Requires Python 3.11+, macOS or Linux. Mutation of source/quarantine files additionally requires `lsof`; project-bytecode validation requires Git. No runtime Python dependencies, daemon, or default network requests.
 
-Install the v0.4.0 release:
+Install the v0.5.0 release:
 
 ```sh
-git clone --branch v0.4.0 --depth 1 https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner.git
+git clone --branch v0.5.0 --depth 1 https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner.git
 cd fireworks-vibe-cleaner
 python3 scripts/fireworks-vibe-cleaner.py doctor
 ```
 
-Direct script execution needs no package installation. For the shorter `fireworks-vibe-cleaner` command used below, optionally create a virtual environment and run `python -m pip install .`; alternatively replace that command with `python3 scripts/fireworks-vibe-cleaner.py`. During development, use a local checkout and omit the tag clone. Publication and live validation status are recorded in [release notes](releases/v0.4.0.md).
+Direct script execution needs no package installation. For the shorter `fireworks-vibe-cleaner` command used below, optionally create a virtual environment and run `python -m pip install .`; alternatively replace that command with `python3 scripts/fireworks-vibe-cleaner.py`. During development, use a local checkout and omit the tag clone. Publication and live validation status are recorded in [release notes](releases/v0.5.0.md).
 
 To install the Skill, generate the bundle and copy it to the harness you use. These commands intentionally refuse to overwrite an existing installation:
 
@@ -109,6 +109,14 @@ Omit `--enable-network` for explicitly labeled local review. The default selects
 The terminal shows every file, recommendation, reason, facts, alternatives and unknowns. Private JSON preserves Jev's original choice and any low-confidence override. `backup` retains originals; `prepare_removal` only recommends preparing a verified-backup-then-remove proposal; `prepare_cache_cleanup` only prepares quarantine and separately approved purge. This command creates no executable plan and reclaims zero bytes.
 
 After scope selection, perform full hashes and protection/activity checks. Show every method, reason, impact, backup location and exact plan hash directly in chat, then obtain explicit human confirmation before execution. A Markdown link alone is insufficient. See [capability basis, limits and bounds](jev.md).
+
+Existing-backup and recovery options (add to `triage`):
+
+```bash
+--archive /private/existing-backup.zip --verify-backup-bytes 16777216 --recovery-need unknown
+```
+
+Repeat `--archive` for existing copies. The default zero budget finds manifest references without checking bytes; the maximum 32 GiB budget counts source plus expanded selected-member bytes, not ZIP size, whole-archive verification or native resume. `--recovery-need archive-copy` is only for an explicit user requirement that file-copy recovery suffices; `native-resume` means original continuation is required. Both it and the default `unknown` close removal preparation. This preference never approves deletion. Batched activity checks run by default; `--skip-activity` leaves activity unknown. `verify_backup` recommends validating a matching copy, and `reuse_verified_backup` retains the original with its selected verified copy. Protected/current/linked/pinned/open objects bypass Jev. Missing supported index evidence stays unknown.
 
 ## Single-call Jev advice (compatibility command)
 

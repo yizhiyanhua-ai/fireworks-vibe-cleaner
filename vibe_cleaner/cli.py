@@ -116,6 +116,12 @@ def parser() -> argparse.ArgumentParser:
     s.add_argument("--id", action="append", help="Explicit candidates; otherwise inspect largest files within limit")
     s.add_argument("--limit", type=int, default=40, help="Automatic selection limit, 1..100")
     s.add_argument("--goal", choices=sorted(triage.GOALS), default="balanced")
+    s.add_argument("--recovery-need", choices=sorted(triage.triage_evidence.RECOVERY_NEEDS), default="unknown",
+                   help="Explicit user preference only; archive-copy never authorizes deletion")
+    s.add_argument("--archive", action="append", type=Path, default=[], help="Existing ZIP to inspect; repeat as needed")
+    s.add_argument("--verify-backup-bytes", type=int, default=0,
+                   help="Budget for source plus expanded selected member bytes; default 0 checks references only")
+    s.add_argument("--skip-activity", action="store_true", help="Keep activity unknown; disables removal preparation")
     s.add_argument("--enable-network", action="store_true")
     s.add_argument("--format", choices=["text", "json"], default="text")
     s.add_argument("--language", choices=["zh", "en"], default="zh")
@@ -226,7 +232,9 @@ def execute(a: argparse.Namespace) -> Json:
     if a.command == "triage":
         if a.output.exists() or a.output.is_symlink():
             raise Refused("Choose a new triage output file before making provider calls")
-        result = triage.run(load(a.scan), a.id, limit=a.limit, goal=a.goal, enabled=a.enable_network)
+        result = triage.run(load(a.scan), a.id, limit=a.limit, goal=a.goal, enabled=a.enable_network,
+                            archives=a.archive, max_verify_bytes=a.verify_backup_bytes,
+                            inspect_activity=not a.skip_activity, recovery_need=a.recovery_need)
         write(a.output, result)
         return result
     if a.command == "advise":

@@ -24,7 +24,7 @@ assert "name: fireworks-vibe-cleaner" in (ROOT / "SKILL.md").read_text()
 for path in (ROOT / "docs/experiments").glob("*.json"):
     report = json.loads(path.read_text())
     assert report["real_user_data_modified"] is False
-    if report["data"] not in {"real-live-jev", "real-jev-triage"}:
+    if report["data"] not in {"real-live-jev", "real-jev-triage", "real-jev-evidence"}:
         assert report["network_calls"] == 0
     if report["data"] == "synthetic-only":
         assert report["passed"] and len(report["experiments"]) == 7
@@ -63,6 +63,20 @@ for path in (ROOT / "docs/experiments").glob("*.json"):
             assert sum(run["action_counts"].values()) == report["source_files"]
             assert all(d["action"] in {"keep", "review", "backup", "prepare_removal", "prepare_cache_cleanup"}
                        for d in run["decisions"])
+    elif report["data"] == "real-jev-evidence":
+        assert not report["transport_mocked"] and not report["source_mutations_executed"]
+        assert report["actual_reclaimed_bytes"] == 0 and report["no_accuracy_claim"]
+        assert report["all_hash_checked_sources_unchanged"]
+        assert report["hash_checked_files"] + report["protected_or_dynamic_files_not_hashed"] == report["source_files"]
+        assert report["network_calls"] == sum(r["provider"]["calls"] for r in report["runs"])
+        assert report["no_cleanup_authorization"] and report["recovery_need"] == "unknown"
+        assert report["total_validation_calls"] == report["network_calls"] + report["earlier_attempt"]["network_calls"] + report["diagnostic_call"]["calls"]
+        for run in report["runs"]:
+            assert len(run["decisions"]) == report["source_files"]
+            assert sum(run["action_counts"].values()) == report["source_files"]
+        for run in report["runs"][1:]:
+            assert "prepare_removal" not in run["action_counts"]
+            assert all(not d["facts"]["protected"] or d["source"] == "local-protection" for d in run["decisions"])
     elif report["data"] == "real-session-preflight":
         assert report["source_mutations_authorized"] is False
         assert report["source_mutations_executed"] is False

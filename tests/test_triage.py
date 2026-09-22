@@ -24,7 +24,7 @@ from vibe_cleaner.scan import scan
 
 ACTIONS = {
     "keep_in_place", "review_uncertain", "backup_preserve_history",
-    "prepare_verified_removal", "prepare_disposable_cleanup",
+    "prepare_verified_removal", "prepare_disposable_cleanup", "reuse_verified_backup", "keep_protected", "verify_existing_backup",
 }
 SAFE = {"keep_in_place", "review_uncertain"}
 
@@ -77,6 +77,8 @@ class TriageContract(unittest.TestCase):
         patch.dict(os.environ, {"TYPESAFE_API_KEY": self.key}).start()
         # A missed transport injection must fail locally before any request.
         patch("urllib.request.OpenerDirector.open", side_effect=AssertionError("real network forbidden")).start()
+        patch("vibe_cleaner.triage_evidence.activity",
+              side_effect=lambda items: {i["id"]: "no_open_handles" for i in items}).start()
 
     def transcript(self, n=0, *, source="cli", linked=False, age_days=90):
         uid = f"12345678-1234-4321-abcd-{n:012d}"
@@ -195,6 +197,43 @@ class TriageContract(unittest.TestCase):
         request = triage.packet(rows)
         self.assertLessEqual(self.actions(request["questions"]["c0"]), SAFE)
 
+    def test_each_removal_precondition_is_required_and_payload_fits(self):
+        self.transcript()
+        row = self.rows(self.inventory())[0]
+        row["facts"].update(backup_status="selected_bytes_verified", pin="unpinned", links="no_indexed_links",
+                            recent_use="old", current_context="other", activity="no_open_handles",
+                            recovery_need="archive-copy")
+        self.assertIn("prepare_verified_removal", triage.allowed(row["facts"]))
+        deltas = [{"backup_status": "manifest_only"}, {"backup_status": "invalid"}, {"pin": "unknown"},
+                  {"pin": "pinned"}, {"links": "linked"}, {"links": "unknown"}, {"recent_use": "recent"},
+                  {"current_context": "unknown"}, {"current_context": "current"}, {"activity": "open"},
+                  {"activity": "unknown"}, {"recovery_need": "unknown"}, {"recovery_need": "native-resume"},
+                  {"retention_met": False}, {"old_main_header_recognized": False}, {"protected": True}]
+        for delta in deltas:
+            changed = copy.deepcopy(row)
+            changed["facts"].update(delta)
+            with self.subTest(delta=delta):
+                self.assertNotIn("prepare_verified_removal", triage.packet([changed])["questions"]["c0"]["criteria"])
+        self.assertLessEqual(len(json.dumps(triage.packet([row] * triage.BATCH_SIZE)).encode()), 16384)
+
+    def test_protected_candidates_bypass_provider(self):
+        self.protected()
+        inv = self.inventory()
+        with self.no_hash_or_mutation():
+            result = triage.run(inv, [i["id"] for i in inv["items"]], enabled=True,
+                                transport=lambda *_: self.fail("protected file must never reach provider"))
+        self.assertEqual(result["provider"]["calls"], 0)
+        self.assertEqual(result["decisions"][0]["source"], "local-protection")
+        self.assertEqual(result["decisions"][0]["action"], "keep")
+
+    def test_existing_unverified_backup_has_distinct_verification_option(self):
+        self.transcript()
+        row = self.rows(self.inventory())[0]
+        row["facts"]["backup_status"] = "manifest_only"
+        options = triage.packet([row])["questions"]["c0"]["criteria"]
+        self.assertIn("verify_existing_backup", options)
+        self.assertNotIn("prepare_verified_removal", options)
+
     def test_changed_missing_and_symlink_sources_lose_preparatory_actions(self):
         for n in range(3):
             self.transcript(n)
@@ -217,20 +256,25 @@ class TriageContract(unittest.TestCase):
         inv = self.inventory()
         for item in inv["items"]:
             row = self.rows({**inv, "items": [item]})
+            # A recognized old header alone no longer opens removal preparation.
+            self.assertNotIn("prepare_verified_removal", self.actions(triage.packet(row)["questions"]["c0"]))
+            row[0]["facts"].update(backup_status="selected_bytes_verified", pin="unpinned", links="no_indexed_links",
+                                   recent_use="old", current_context="other", activity="no_open_handles",
+                                   recovery_need="archive-copy")
             actions = self.actions(triage.packet(row)["questions"]["c0"])
             if item["relative"].endswith("000000000000.jsonl"):
                 self.assertIn("prepare_verified_removal", actions)
             else:
                 self.assertNotIn("prepare_verified_removal", actions)
 
-    def test_preparatory_removal_is_not_execution_and_never_hashes(self):
+    def test_backup_suggestion_is_not_execution_and_default_never_hashes(self):
         self.transcript()
         inv = self.inventory()
         with self.no_hash_or_mutation():
-            result = triage.run(inv, enabled=True, transport=self.transport("prepare_verified_removal"))
+            result = triage.run(inv, enabled=True, transport=self.transport("backup_preserve_history"))
         self.nonexecuting(result)
-        self.assertEqual(result["decisions"][0]["action"], "prepare_removal")
-        self.assertEqual(result["decisions"][0]["reason_code"], "prepare_verified_removal")
+        self.assertEqual(result["decisions"][0]["action"], "backup")
+        self.assertEqual(result["decisions"][0]["reason_code"], "backup_preserve_history")
         self.assertEqual(self.paths[0].read_bytes(), self.original[self.paths[0]])
         rendered = triage.render(result, language="zh")
         self.assertIsInstance(rendered, str)
@@ -245,7 +289,8 @@ class TriageContract(unittest.TestCase):
         facts = self.rows(inv)[0]["facts"]
         self.assertEqual(facts["backup_status"], "not_checked")
         self.assertEqual(facts["activity"], "not_checked")
-        self.assertEqual(facts["index_pin_and_lineage"], "not_checked")
+        self.assertEqual(facts["pin"], "unknown")
+        self.assertEqual(facts["links"], "unknown")
 
     def test_forty_decisions_are_batched_without_duplicates_or_scope_loss(self):
         for n in range(40):
@@ -266,7 +311,7 @@ class TriageContract(unittest.TestCase):
         def transport(request, timeout):
             parsed = json.loads(request.data)
             self.calls.append(parsed)
-            result = self.answer(parsed, "prepare_verified_removal", confidence=0.01)
+            result = self.answer(parsed, "backup_preserve_history", confidence=0.01)
             result["extra"] = self.secret
             for answer in result["answers"].values():
                 answer["explanation"] = self.secret
@@ -300,7 +345,7 @@ class TriageContract(unittest.TestCase):
                     self.calls.append(parsed)
                     if case == "timeout":
                         raise TimeoutError(self.secret)
-                    response = self.answer(parsed, "prepare_verified_removal")
+                    response = self.answer(parsed, "backup_preserve_history")
                     answer = response["answers"]["c0"]
                     if case == "forbidden-choice":
                         answer["choice"] = "purge_now_without_approval"

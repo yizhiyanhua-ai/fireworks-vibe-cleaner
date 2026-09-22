@@ -14,15 +14,17 @@ Use plain language in Codex or Claude Code to inspect coding logs, conversations
 
 ### 1. Install, then configure Jev
 
-> Install fireworks-vibe-cleaner v0.4.0 from https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner into this tool's personal Skill directory. Do not overwrite an existing installation or clean any files. Then help me configure Jev securely.
+> Install fireworks-vibe-cleaner v0.5.0 from https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner into this tool's personal Skill directory. Do not overwrite an existing installation or clean any files. Then help me configure Jev securely.
 
 You need macOS/Linux and Python 3.11+. See the [manual installation guide](docs/cli.md#install). Jev uses `TYPESAFE_API_KEY`, injected through a secret manager or process environment; never paste the key into chat, a report or command history. `doctor` checks whether a key is present, not whether authentication or inference succeeds.
 
 > Explain Jev's metadata and possible charges before making a network call. If I choose rules-only mode, continue locally without a key.
 
-**Start with Jev for fast triage and handling recommendations.** Local code gathers compact facts; Jev selects keep, review, backup while retaining the original, or prepare a removal proposal, with a reason bound to each choice. Backup and deletion are separate decisions. Transcript removal requires verified backups and approval of its exact plan. Only categories, size bands, retention/protection/header-check results and your selected goal leave the machine, without paths, filenames, transcripts or code. Missing credentials or failed calls are explicitly labeled local fallback.
+**Configure Jev first, then let it help review fresh local evidence.** The cleaner checks selected Codex index protection and relationships, open file handles, and any existing backups you supply. Protected objects stay local and are retained. Jev receives only closed metadata choices, without paths, titles, transcripts or code; a failed call is labeled local review.
 
-Jev fits fast, narrow classification decisions. Code handles arithmetic, dates and file validation. Eight candidates per batch and up to three concurrent batches provide early advice; full backup hashes are checked after scope selection. Metadata cannot establish the future value of a conversation: old or large does not mean disposable. See [Jev triage design and limits](docs/jev.md).
+Say what you need to keep: “I need to continue these conversations” or “A verified file copy is enough for these selected sessions.” If you have not decided, the recovery need remains unknown and removal preparation is unavailable. A found backup and a verified backup are different: the cleaner can check selected bytes within a read budget before suggesting reuse. Your recovery preference never approves deletion.
+
+Jev makes a narrow action/reason choice; code does the arithmetic and verification. Eight candidates per batch and up to three concurrent batches keep requests bounded. Metadata cannot establish a conversation's future value. See [evidence, choices and limits](docs/jev.md).
 
 ### 2. Inspect and ask for recommendations
 
@@ -85,6 +87,27 @@ Incomplete index, file or lineage coverage blocks executable native plans while 
 
 See the [CLI guide](docs/cli.md), [compatibility](docs/compatibility.md) and [v0.2.0 evidence record](docs/releases/v0.2.0.md). Keep local reports and recovery data private.
 
+## v0.5.0: real evidence and decision comparison
+
+On 2026-09-22 we checked **14 existing files, 404,874,193 logical bytes**, with 10 distinct evidence combinations. These included old/recent/current and related sessions, protected files and assets. Local evidence took **329 ms** (index/policy 16, activity 287, backup 24); no full inventory scan is included.
+
+| Observation | Measured result |
+| --- | --- |
+| v0.4.0 on the same selected files | 1,060 ms; 2 removal-preparation suggestions, 12 reviews |
+| v0.5 evidence, two frozen-input repetitions | **1,459 / 1,405 ms** including fact collection; both 5 local keeps, 9 reviews |
+| Existing backup evidence | 2 selected source/member byte checks passed; 1 manifest-only match deferred by budget; 6 had no match in supplied archives; 5 were not checked |
+| Local protection | 5 objects bypassed Jev; this is local policy, not model judgment |
+| Raw Jev choices in each repetition | 8 reviews; 1 verify-existing-backup choice at confidence 0.44, routed to review by the local 0.5 rule |
+| Observed consistency | 9/9 raw choices and 14/14 final actions matched across the two repetitions |
+| User recovery need | Unknown; removal-preparation choices stayed closed |
+| Source stability / actual reclaim | 9/9 checked source hashes matched; 5 protected/dynamic files were not hashed; **0 bytes reclaimed** |
+
+The 16 MiB logical verification budget covered 9,776,540 bytes of source plus expanded selected-member reads. It did not verify whole ZIPs or native conversation resume. Selection and additional before/after hashes are outside the timed stage. Pinned threads and eligible old logs/caches were not covered by this real sample.
+
+**This validates evidence collection and stricter gates, not accurate backup-versus-delete judgment.** New runs were slower than this baseline. Removing the old baseline's two preparation suggestions follows stricter evidence/recovery requirements, not proven model improvement. Two repeats do not establish a general consistency rate.
+
+The initial attempt had one `unavailable-or-invalid` batch; its old generic status did not record whether transport or validation caused it. One frozen diagnostic and the subsequent full comparison succeeded. Across all attempts: 11 calls, 10 accepted responses, 20,159 known input tokens; known input cost is estimated at US$0.000846678 using the [official price](https://docs.typesafe.ai/models), excluding unknown usage of the failed call. Billing was not verified. [All sanitized results, including the failure](docs/experiments/real-jev-evidence-2026-09-22.json) · [Reproduction tool](tools/live_evidence_validation.py).
+
 ## v0.4.0: real Jev triage latency comparison
 
 On 2026-09-22, the same **33 existing old main transcripts, 1,049,047,931 bytes (about 1.05 GB)** were evaluated with serial and concurrent real provider calls. No provider responses were mocked; full source hashes matched before and after.
@@ -101,7 +124,7 @@ On 2026-09-22, the same **33 existing old main transcripts, 1,049,047,931 bytes 
 
 Concurrent elapsed time was about **66% lower in this comparison**. Timings cover fresh identity/retention/header checks and real inference, reusing an existing selected inventory. Full scans, archive verification and benchmark-only before/after source hashes are excluded. The two runs used 25,628 input tokens, estimated at US$0.001076376 using the [official rate](https://docs.typesafe.ai/models); billing was not verified.
 
-Recommendations differed between runs; low confidence routes to review under a product rule. This sample has no labeled ground truth and establishes neither deletion accuracy nor a repeatable speedup. No real cleanup occurred. Removal preparation still needs recovery-needs review, verified backups, protection checks and explicit approval of the final plan. [Sanitized results](docs/experiments/real-jev-triage-2026-09-22.json) · [Reproduction tool](tools/live_triage_validation.py).
+All 33 files had identical metadata in the provider packet; different choices did not establish file-specific understanding. Recommendations differed between runs; low confidence routes to review under a product rule. This sample has no labeled ground truth and establishes neither deletion accuracy nor a repeatable speedup. No real cleanup occurred. Removal preparation still needs recovery-needs review, verified backups, protection checks and explicit approval of the final plan. [Sanitized results](docs/experiments/real-jev-triage-2026-09-22.json) · [Reproduction tool](tools/live_triage_validation.py).
 
 ## v0.3.0 history checks
 
@@ -185,4 +208,4 @@ ruff check .
 mypy vibe_cleaner
 ```
 
-Local tests cover the CLI workflow, native history boundaries and interrupted recovery. CI runs on macOS/Linux with Python 3.11/3.14; check the [actual workflow results](https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner/actions/workflows/ci.yml). See [release notes](docs/releases/v0.4.0.md), [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md). MIT © 2026 Fireworks.
+Local tests cover the CLI workflow, native history boundaries and interrupted recovery. CI runs on macOS/Linux with Python 3.11/3.14; check the [actual workflow results](https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner/actions/workflows/ci.yml). See [release notes](docs/releases/v0.5.0.md), [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md). MIT © 2026 Fireworks.

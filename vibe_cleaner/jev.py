@@ -175,5 +175,18 @@ def request_advice(request: Json, *, enabled: bool = False,
         code = exc.code
         exc.close()
         return {"status": f"http-{code}", "mode": "rules-only", "calls": 1}
-    except (OSError, ValueError, Refused):
-        return {"status": "unavailable-or-invalid", "mode": "rules-only", "calls": 1}
+    except Refused as exc:
+        # Only our fixed validator messages may leave this boundary.
+        reasons = {
+            "Unexpected provider model": "model", "Provider candidate IDs mismatch": "candidate-ids",
+            "Invalid or forbidden advisor action": "action", "Invalid probability keys": "probability-keys",
+            "Invalid probability/confidence range": "probability-range",
+            "Probabilities do not sum to one": "probability-sum",
+            "Choice does not match the highest probability": "choice-probability",
+            "Invalid provider usage": "usage", "Oversize provider response": "response-size",
+        }
+        return {"status": "unavailable-or-invalid", "mode": "rules-only", "calls": 1,
+                "error_code": reasons.get(str(exc), "validation")}
+    except (OSError, ValueError) as exc:
+        return {"status": "unavailable-or-invalid", "mode": "rules-only", "calls": 1,
+                "error_code": "transport" if isinstance(exc, OSError) else "response-json"}

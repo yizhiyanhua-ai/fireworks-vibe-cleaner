@@ -44,6 +44,15 @@ class JevContract(unittest.TestCase):
         with patch.dict(os.environ, {"TYPESAFE_API_KEY": ""}):
             self.assertEqual(jev.advise(self.items, enabled=True)["calls"], 0)
 
+    def test_invalid_response_has_fixed_diagnostic_without_exception_text(self):
+        with patch.dict(os.environ, {"TYPESAFE_API_KEY": "test-only"}):
+            result = jev.request_advice(self.request, enabled=True, transport=lambda *a: {})
+            self.assertEqual(result["error_code"], "model")
+            with patch("urllib.request.OpenerDirector.open", side_effect=OSError("private secret")):
+                result = jev.request_advice(self.request, enabled=True)
+                self.assertEqual(result["error_code"], "transport")
+                self.assertNotIn("secret", str(result))
+
     def test_batch_boundaries_and_no_state_mutation(self):
         before = copy.deepcopy(self.items)
         p = jev.packet(self.items * 2)
