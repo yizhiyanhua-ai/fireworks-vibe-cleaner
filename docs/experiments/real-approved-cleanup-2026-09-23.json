@@ -1,0 +1,56 @@
+{
+  "schema": 1,
+  "data": "real-approved-cleanup",
+  "date": "2026-09-23 Asia/Shanghai",
+  "dataset": "existing private Codex transcripts selected from an earlier verified backup set",
+  "authorization": "exact human-approved scope and plan hash; source writers confirmed stopped",
+  "source_mutations_authorized": true,
+  "real_user_data_modified": true,
+  "network_calls": 4,
+  "canary": {
+    "files": 1,
+    "logical_bytes": 2036098,
+    "removed": true,
+    "archive_only_verification": "passed",
+    "restored_to_original_path": true,
+    "restored_byte_verification": "passed",
+    "retained_at_end": true
+  },
+  "cleanup": {
+    "originals_removed": 188,
+    "logical_bytes_removed": 6280929947,
+    "valid_archive_only_items": 188,
+    "invalid_items": 0,
+    "archives_retained": 9,
+    "archives_verified": true
+  },
+  "volume_observations": {
+    "executor_window_delta_bytes": 5173981184,
+    "external_df_window_delta_bytes": 5198995456,
+    "external_df_window_delta_gib": 4.842,
+    "attribution": "observed volume changes may include unrelated writes and filesystem accounting; they are not claimed as tool-exclusive reclaim"
+  },
+  "excluded_scope": {
+    "reviewed_but_not_selected": 375,
+    "statement": "these objects did not enter the cleanup plan; this does not assert that no external process changed them"
+  },
+  "jev_acceptance": {
+    "real_metadata_candidates": 14,
+    "real_calls": 2,
+    "real_decisions": 28,
+    "real_choices": {
+      "review": 28
+    },
+    "synthetic_candidates": 20,
+    "synthetic_calls": 2,
+    "estimated_known_input_cost_usd": 0.000675276,
+    "billing_statement_verified": false,
+    "paths_or_content_sent": false,
+    "interpretation": "request/response integration passed; no cleanup-accuracy advantage or deletion authority was established"
+  },
+  "not_verified": [
+    "native conversation continuation",
+    "original-path restoration of every removed cleanup item",
+    "tool-exclusive attribution of the observed volume delta"
+  ]
+}

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.0 — 2026-09-23
+
+- Add read-only `archive-refresh` for expired, unexecuted plans; it revalidates exact source bytes and archive bindings and always produces a new approval hash.
+- Add a plan-bound `archive-workflow-*` state machine that verifies removal and original-path restoration of one canary before starting the cleanup plan.
+- Add compact archive verification receipts and per-filesystem volume observations with explicit time windows and attribution limits.
+- Rewrite the bilingual quick start around natural-language use, Skill/CLI responsibilities, operation differences and exact human approval.
+- Publish a sanitized real execution record: one restored canary, 188 archived originals removed, 9 archives retained and two distinct volume observations.
+
 ## 0.6.0 — 2026-09-22
 
 - Add bounded local purpose observations, source-bound optional annotations and explicit offline rule advice.

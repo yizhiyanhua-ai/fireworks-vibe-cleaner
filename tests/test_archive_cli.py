@@ -141,6 +141,15 @@ class ArchiveCLITests(unittest.TestCase):
         self.assertEqual(plan["source_logical_bytes"], len(self.original))
         self.assertFalse(plan["harness_resume_verified"])
         self.assertEqual(plan["items"][0]["id"], candidate)
+        refreshed_path = self.base / "archive-plan-refreshed.json"
+        refreshed = self.cli(
+            "archive-refresh", "--plan", plan_path, "--ttl-seconds", 7200,
+            "--output", refreshed_path,
+        )
+        self.assertTrue(refreshed["refresh"]["scope_unchanged"])
+        self.assertEqual(refreshed["refresh"]["supersedes_hash"], plan["hash"])
+        self.assertEqual(refreshed["items"], plan["items"])
+        self.assertNotEqual(refreshed["hash"], plan["hash"])
         approval = plan["hash"]
         apply_args = ("archive-apply", "--plan", plan_path)
         missing = self.cli(*apply_args, expected=2, json_output=False)
@@ -173,6 +182,10 @@ class ArchiveCLITests(unittest.TestCase):
         self.assertTrue(removed["archives_verified"])
         self.assertEqual(removed["items"], [{"index": 0, "location": "archive-only", "valid": True}])
         self.assertEqual(removed["removed_logical_bytes"], len(self.original))
+        summary = self.cli("archive-verify", *run_args, "--summary")
+        self.assertEqual(summary["items"], 1)
+        self.assertEqual(summary["locations"], {"archive-only": 1})
+        self.assertEqual(summary["invalid_items"], 0)
         restored = self.cli("archive-restore", *run_args, "--writers-stopped")
         self.assertEqual(restored["status"], "restored")
         self.assertEqual(restored["files"], 1)
@@ -187,6 +200,58 @@ class ArchiveCLITests(unittest.TestCase):
         self.assertEqual(verified["removed_logical_bytes"], 0)
         self.assertEqual(archive.read_bytes(), archive_bytes)
         self.assertEqual(manifest.read_bytes(), manifest_bytes)
+
+    def test_archive_workflow_cli_binds_canary_to_cleanup(self):
+        if not self.lsof_available:
+            self.skipTest("Actual archive mutations require local lsof")
+        second_uid = "87654321-4321-1234-abcd-123456789abc"
+        second = self.source.with_name(
+            "rollout-2025-01-01T00-00-01-" + second_uid + ".jsonl"
+        )
+        second.write_text(json.dumps({"type": "session_meta", "payload": {
+            "id": second_uid, "source": "cli"}}) + "\n")
+        second.chmod(0o600)
+        old = time.time_ns() - 60 * 86400 * 10**9
+        os.utime(second, ns=(old, old))
+        inventory_path = self.base / "workflow-scan.json"
+        self.cli("scan", "--root", "codex=" + str(self.root), "--min-age-days", 30,
+                 "--output", inventory_path)
+        inventory = json.loads(inventory_path.read_text())
+        by_relative = {row["relative"]: row["id"] for row in inventory["items"]}
+        canary_id = by_relative[str(self.source.relative_to(self.root))]
+        cleanup_id = by_relative[str(second.relative_to(self.root))]
+        backup_dir = self.base / "workflow-backups"
+        backup_dir.mkdir(mode=0o700)
+        archive = backup_dir / "sessions.zip"
+        self.cli("backup", "--scan", inventory_path, "--id", canary_id, "--id", cleanup_id,
+                 "--output", archive, "--max-bytes", 100000)
+        state = self.base / "workflow-state"
+        canary_path = self.base / "canary-plan.json"
+        cleanup_path = self.base / "cleanup-plan.json"
+        self.cli("archive-plan", "--scan", inventory_path, "--id", canary_id,
+                 "--archive", archive, "--state-dir", state, "--max-bytes", 100000,
+                 "--output", canary_path)
+        self.cli("archive-plan", "--scan", inventory_path, "--id", cleanup_id,
+                 "--archive", archive, "--state-dir", state, "--max-bytes", 100000,
+                 "--output", cleanup_path)
+        workflow_path = self.base / "workflow-plan.json"
+        workflow = self.cli("archive-workflow-plan", "--canary-plan", canary_path,
+                            "--cleanup-plan", cleanup_path, "--output", workflow_path)
+        refused = self.cli("archive-workflow-apply", "--plan", workflow_path,
+                           "--approve", "0" * 64, "--writers-stopped",
+                           "--acknowledge-history-risk", expected=2)
+        self.assertEqual(refused["error"], "Refused")
+        result = self.cli("archive-workflow-apply", "--plan", workflow_path,
+                          "--approve", workflow["hash"], "--writers-stopped",
+                          "--acknowledge-history-risk")
+        self.assertEqual(result["status"], "verified")
+        self.assertTrue(self.source.exists())
+        self.assertFalse(second.exists())
+        receipt = self.cli("archive-workflow-verify", "--state-dir", state,
+                           "--run", workflow["hash"])
+        self.assertTrue(receipt["ok"])
+        self.assertEqual(receipt["canary"]["locations"], {"source": 1})
+        self.assertEqual(receipt["cleanup"]["locations"], {"archive-only": 1})
 
     def test_doctor_and_advice_are_offline_and_secret_safe(self):
         doctor = self.cli("doctor")

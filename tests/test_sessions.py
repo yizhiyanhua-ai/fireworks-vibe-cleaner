@@ -51,6 +51,11 @@ class ArchiveRemovalTests(unittest.TestCase):
         plan, result = self.apply()
         self.assertTrue(all(not p.exists() for p in self.paths))
         self.assertEqual(result["deleted_logical_bytes"], sum(len(b) for b, _ in before))
+        self.assertEqual(len(result["observed_free_delta_by_volume"]), 1)
+        observation = next(iter(result["observed_free_delta_by_volume"].values()))
+        self.assertEqual(observation["method"], "shutil.disk_usage")
+        self.assertEqual(observation["observed_free_delta_bytes"],
+                         observation["free_after_bytes"] - observation["free_before_bytes"])
         self.assertTrue(self.archive.exists())
         self.assertTrue(sessions.verify(self.state, plan["hash"])["ok"])
         sessions.restore(self.state, plan["hash"], quiescent=True)
@@ -62,6 +67,16 @@ class ArchiveRemovalTests(unittest.TestCase):
         self.assertEqual(sessions.verify(self.state, plan["hash"])["removed_logical_bytes"], 0)
         with self.assertRaises(Refused):
             sessions.apply(plan, plan["hash"], quiescent=True, acknowledge_risk=True)
+
+    def test_volume_snapshot_deduplicates_roots_on_one_device(self):
+        other = self.base / "other-root"
+        other.mkdir()
+        items = [{"root": str(self.root)}, {"root": str(other)}, {"root": str(self.root)}]
+        snapshot = sessions.volume_snapshot(items)
+        self.assertEqual(len(snapshot), 1)
+        row = next(iter(snapshot.values()))
+        self.assertIn(row["representative_root"], {str(self.root), str(other)})
+        self.assertEqual(row["method"], "shutil.disk_usage")
 
     def test_exact_approval_risk_ack_stopped_writers_and_expiry(self):
         plan = self.plan()

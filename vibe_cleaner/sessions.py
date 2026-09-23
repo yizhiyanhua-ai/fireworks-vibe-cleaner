@@ -6,6 +6,7 @@ The log/cache executor deliberately remains a separate, narrower path.
 from __future__ import annotations
 
 import contextlib
+import copy
 import hashlib
 import json
 import os
@@ -36,6 +37,41 @@ def durable_directory_chain(path: Path) -> None:
         if path.parent == path:
             break
         path = path.parent
+
+
+def volume_snapshot(items: list[Json]) -> Json:
+    """Measure free bytes once per filesystem device, even with several source roots."""
+    captured_at = time.time()
+    by_device: Json = {}
+    for root in sorted({str(Path(item["root"])) for item in items}):
+        device = str(Path(root).stat().st_dev)
+        if device not in by_device:
+            by_device[device] = {
+                "device": int(device),
+                "representative_root": root,
+                "free_bytes": shutil.disk_usage(root).free,
+                "captured_at": captured_at,
+                "method": "shutil.disk_usage",
+            }
+    return by_device
+
+
+def volume_delta(before: Json, after: Json) -> Json:
+    if set(before) != set(after):
+        raise Refused("Source volume set changed during cleanup")
+    return {
+        device: {
+            "device": row["device"],
+            "representative_root": row["representative_root"],
+            "free_before_bytes": row["free_bytes"],
+            "free_after_bytes": after[device]["free_bytes"],
+            "observed_free_delta_bytes": after[device]["free_bytes"] - row["free_bytes"],
+            "started_at": row["captured_at"],
+            "ended_at": after[device]["captured_at"],
+            "method": row["method"],
+        }
+        for device, row in before.items()
+    }
 
 
 def file_ref(path: Path) -> Json:
@@ -195,6 +231,39 @@ def make_plan(inventory: Json, ids: list[str], archives: list[Path], state: Path
     return plan
 
 
+def refresh_plan(plan: Json, *, ttl: int = 3600) -> Json:
+    """Revalidate an expired plan without changing its reviewed scope or bindings."""
+    if not 1 <= ttl <= 86400:
+        raise Refused("Choose a refresh TTL between 1 and 86400 seconds")
+    previous_hash = plan.get("hash")
+    if not isinstance(previous_hash, str):
+        raise Refused("Archive plan is missing its reviewed hash")
+    check_plan(plan, previous_hash, expired_ok=True)
+    state = Path(plan["state_dir"])
+    if run_path(state, previous_hash).exists():
+        raise Refused("This plan already has an execution journal; verify or restore it instead of refreshing")
+    idle_check(plan["archives"])
+    with checked_archives(plan):
+        for item in plan["items"]:
+            with candidate_fd(item) as fd:
+                check_header(fd, item)
+                if file_hash(fd) != item["sha256"]:
+                    raise Refused("Source bytes changed; create and review a new plan")
+        idle_check(plan["items"])
+    refreshed = copy.deepcopy(plan)
+    now = time.time()
+    refreshed["created_at"] = now
+    refreshed["expires_at"] = now + ttl
+    refreshed["refresh"] = {
+        "supersedes_hash": previous_hash,
+        "scope_unchanged": True,
+        "allowed_changes": ["created_at", "expires_at", "hash", "refresh"],
+    }
+    refreshed["hash"] = seal(refreshed)
+    check_plan(refreshed, refreshed["hash"])
+    return refreshed
+
+
 def check_plan(plan: Json, approval: str, *, expired_ok: bool = False) -> None:
     if (plan.get("schema") != 1 or plan.get("policy") != POLICY or plan.get("action") != ACTION
             or plan.get("risk") != RISK or plan.get("harness_resume_verified") is not False):
@@ -248,9 +317,9 @@ def apply(plan: Json, approval: str, *, quiescent: bool, acknowledge_risk: bool)
             with candidate_fd(binding) as fd:
                 os.fsync(fd)
             durable_directory_chain(Path(binding["root"]))
-        devices = {str(Path(i["root"])) for i in plan["items"]}
-        before = {root: shutil.disk_usage(root).free for root in devices}
-        journal: Json = {"schema": 1, "plan": plan, "status": "removing", "events": [], "free_before": before}
+        before = volume_snapshot(plan["items"])
+        journal: Json = {"schema": 1, "plan": plan, "status": "removing", "events": [],
+                         "volume_before": before}
         journal_save(directory, journal)
         try:
             for index, item in enumerate(plan["items"]):
@@ -275,13 +344,18 @@ def apply(plan: Json, approval: str, *, quiescent: bool, acknowledge_risk: bool)
             journal_save(directory, journal)
             raise
         journal["deleted_logical_bytes"] = sum(i["identity"]["size"] for i in plan["items"])
-        journal["observed_free_delta_by_root"] = {root: shutil.disk_usage(root).free - free for root, free in before.items()}
+        journal["volume_observations"] = volume_delta(before, volume_snapshot(plan["items"]))
+        journal["observed_free_delta_by_root"] = {
+            row["representative_root"]: row["observed_free_delta_bytes"]
+            for row in journal["volume_observations"].values()
+        }
         journal_save(directory, journal)
         return {"run": plan["hash"], "status": "removed", "files": len(plan["items"]),
                 "deleted_logical_bytes": journal["deleted_logical_bytes"],
                 "observed_free_delta_by_root": journal["observed_free_delta_by_root"],
+                "observed_free_delta_by_volume": journal["volume_observations"],
                 "archive_retained": True, "harness_resume_verified": False,
-                "note": "Free-space changes include unrelated writes and filesystem accounting; do not sum roots on one volume."}
+                "note": "Volume observations may include unrelated writes and filesystem accounting; logical bytes are separate."}
 
 
 def source_matches(item: Json) -> bool:
@@ -318,6 +392,26 @@ def verify(state: Path, run: str) -> Json:
                 "harness_resume_verified": False,
                 "removed_logical_bytes": sum(plan["items"][r["index"]]["identity"]["size"]
                                              for r in rows if r["valid"] and r["location"] == "archive-only")}
+
+
+def summarize_verification(result: Json) -> Json:
+    locations: dict[str, int] = {}
+    invalid = 0
+    for row in result["items"]:
+        locations[row["location"]] = locations.get(row["location"], 0) + 1
+        invalid += not row["valid"]
+    return {
+        "run": result["run"],
+        "status": result["status"],
+        "ok": result["ok"],
+        "items": len(result["items"]),
+        "locations": locations,
+        "invalid_items": invalid,
+        "archives_verified": result["archives_verified"],
+        "harness_resume_verified": result["harness_resume_verified"],
+        "removed_logical_bytes": result["removed_logical_bytes"],
+        "detail": "Run archive-verify without --summary for per-item locations.",
+    }
 
 
 def restore(state: Path, run: str, *, quiescent: bool) -> Json:

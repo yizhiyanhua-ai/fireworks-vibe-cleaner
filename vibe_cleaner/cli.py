@@ -11,7 +11,8 @@ import shutil
 import subprocess
 import sys
 
-from . import __version__, backup, engine, history, jev, native_history, purpose, sessions, triage
+from . import (__version__, archive_workflow, backup, engine, history, jev,
+               native_history, purpose, sessions, triage)
 from .common import Json, Refused, load, write
 from .scan import roots_default, scan
 
@@ -94,6 +95,22 @@ def parser() -> argparse.ArgumentParser:
     s.add_argument("--state-dir", type=Path, required=True)
     s.add_argument("--max-bytes", type=int, required=True)
     s.add_argument("--output", type=Path, required=True)
+    s = sub.add_parser("archive-refresh", help="Revalidate the exact scope of an expired archive plan")
+    s.add_argument("--plan", type=Path, required=True)
+    s.add_argument("--ttl-seconds", type=int, default=3600, help="New review expiry, at most 86400 seconds")
+    s.add_argument("--output", type=Path, required=True)
+    s = sub.add_parser("archive-workflow-plan", help="Bind one restore canary to a later cleanup plan")
+    s.add_argument("--canary-plan", type=Path, required=True)
+    s.add_argument("--cleanup-plan", type=Path, required=True)
+    s.add_argument("--output", type=Path, required=True)
+    s = sub.add_parser("archive-workflow-apply", help="Run the approved canary gate, then cleanup")
+    s.add_argument("--plan", type=Path, required=True)
+    s.add_argument("--approve", required=True)
+    s.add_argument("--writers-stopped", action="store_true")
+    s.add_argument("--acknowledge-history-risk", action="store_true")
+    s = sub.add_parser("archive-workflow-verify", help="Compact receipt for a canary-gated cleanup workflow")
+    s.add_argument("--state-dir", type=Path, required=True)
+    s.add_argument("--run", required=True)
     s = sub.add_parser("archive-apply", help="Remove only approved, archived transcripts; retain backups")
     s.add_argument("--plan", type=Path, required=True)
     s.add_argument("--approve", required=True)
@@ -103,6 +120,8 @@ def parser() -> argparse.ArgumentParser:
         s = sub.add_parser(name)
         s.add_argument("--state-dir", type=Path, required=True)
         s.add_argument("--run", required=True)
+        if name == "archive-verify":
+            s.add_argument("--summary", action="store_true", help="Return counts instead of every item")
         if name == "archive-restore":
             s.add_argument("--writers-stopped", action="store_true")
     s = sub.add_parser("advise", help="Optional one-call Jev review (no deletion authority)")
@@ -228,13 +247,27 @@ def execute(a: argparse.Namespace) -> Json:
         result = sessions.make_plan(load(a.scan), a.id, a.archive, a.state_dir, max_bytes=a.max_bytes, ttl=a.ttl_seconds)
         write(a.output, result)
         return result
+    if a.command == "archive-refresh":
+        result = sessions.refresh_plan(load(a.plan), ttl=a.ttl_seconds)
+        write(a.output, result)
+        return result
+    if a.command == "archive-workflow-plan":
+        result = archive_workflow.make_plan(load(a.canary_plan), load(a.cleanup_plan))
+        write(a.output, result)
+        return result
+    if a.command == "archive-workflow-apply":
+        return archive_workflow.apply(load(a.plan), a.approve, quiescent=a.writers_stopped,
+                                      acknowledge_risk=a.acknowledge_history_risk)
+    if a.command == "archive-workflow-verify":
+        return archive_workflow.verify(a.state_dir.expanduser().absolute(), a.run)
     if a.command == "archive-apply":
         return sessions.apply(load(a.plan), a.approve, quiescent=a.writers_stopped,
                               acknowledge_risk=a.acknowledge_history_risk)
     if a.command in {"archive-verify", "archive-restore"}:
         state = a.state_dir.expanduser().absolute()
         if a.command == "archive-verify":
-            return sessions.verify(state, a.run)
+            result = sessions.verify(state, a.run)
+            return sessions.summarize_verification(result) if a.summary else result
         return sessions.restore(state, a.run, quiescent=a.writers_stopped)
     if a.command == "purpose-template":
         if a.output.exists() or a.output.is_symlink():

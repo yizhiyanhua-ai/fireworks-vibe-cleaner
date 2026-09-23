@@ -8,15 +8,15 @@ If you use this Skill from Codex or Claude Code, start with the prompts in the R
 
 Requires Python 3.11+, macOS or Linux. Mutation of source/quarantine files additionally requires `lsof`; project-bytecode validation requires Git. No runtime Python dependencies, daemon, or default network requests.
 
-Install the v0.6.0 release:
+Install the v0.7.0 release:
 
 ```sh
-git clone --branch v0.6.0 --depth 1 https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner.git
+git clone --branch v0.7.0 --depth 1 https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner.git
 cd fireworks-vibe-cleaner
 python3 scripts/fireworks-vibe-cleaner.py doctor
 ```
 
-Direct script execution needs no package installation. For the shorter `fireworks-vibe-cleaner` command used below, optionally create a virtual environment and run `python -m pip install .`; alternatively replace that command with `python3 scripts/fireworks-vibe-cleaner.py`. During development, use a local checkout and omit the tag clone. Publication and live validation status are recorded in [release notes](releases/v0.6.0.md).
+Direct script execution needs no package installation. For the shorter `fireworks-vibe-cleaner` command used below, optionally create a virtual environment and run `python -m pip install .`; alternatively replace that command with `python3 scripts/fireworks-vibe-cleaner.py`. During development, use a local checkout and omit the tag clone. Publication and live validation status are recorded in [release notes](releases/v0.7.0.md).
 
 To install the Skill, generate the bundle and copy it to the harness you use. These commands intentionally refuse to overwrite an existing installation:
 
@@ -95,6 +95,25 @@ fireworks-vibe-cleaner archive-verify --state-dir /absolute/path/to/private-stat
 ```
 
 `archive-apply` removes selected originals directly after revalidation; it does not quarantine them or delete their archives. Do not pass either acknowledgement flag without the matching user confirmation and stopped writers. History entries may become unavailable because related files and indexes stay unchanged. `archive-restore` restores bytes to exact original paths, allowing a new inode, without updating indexes or proving native continuation. Preserve archives and the run journal. On interruption use `archive-verify`, resolve the specific state, and do not blindly replay removal. Logical bytes removed and observed volume free-space change are different measurements.
+
+### Expired plans and a canary gate
+
+When a plan expires but its exact scope should remain unchanged, a read-only refresh revalidates every source, archive and selected member byte. It refuses plans that already have a run journal or whose sources changed. Show and approve the new hash.
+
+```sh
+fireworks-vibe-cleaner archive-refresh --plan expired-plan.json --ttl-seconds 86400 --output refreshed-plan.json
+```
+
+For a larger cleanup, bind a one-file canary plan and a disjoint cleanup plan into one approval object. `archive-workflow-apply` enforces “remove canary → verify → restore original path → verify → remove cleanup originals → verify.” Cleanup never starts unless the canary is restored as a valid `source`. After interruption, inspect child journals with verify instead of replaying apply.
+
+```sh
+fireworks-vibe-cleaner archive-workflow-plan --canary-plan canary.json --cleanup-plan cleanup.json --output workflow.json
+# Show both complete scopes, the workflow hash and risks in chat, then obtain approval of that hash.
+fireworks-vibe-cleaner archive-workflow-apply --plan workflow.json --approve WORKFLOW_HASH --writers-stopped --acknowledge-history-risk
+fireworks-vibe-cleaner archive-workflow-verify --state-dir /absolute/path/to/private-state --run WORKFLOW_HASH
+```
+
+Per-item verification JSON can be long for large runs. `archive-verify ... --summary` returns location counts, invalid-item count, logical bytes removed and recovery limits; omit `--summary` when individual rows are needed. The executor samples free space once per filesystem device and preserves negative deltas and timestamps. Observations may include other process writes and are not exclusive reclaim attribution.
 
 ## Recommended: fast Jev triage in your terminal
 

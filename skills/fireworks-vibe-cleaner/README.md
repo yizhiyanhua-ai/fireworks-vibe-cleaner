@@ -6,88 +6,70 @@
 
 [![CI](https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner/actions/workflows/ci.yml/badge.svg)](https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner/actions/workflows/ci.yml) [![MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Use plain language in Codex or Claude Code to inspect coding logs, conversations and caches, ask Jev for handling suggestions, and approve a concrete plan before any cleanup. Recommended setup starts with Jev; local rules-only use remains available.
+fireworks-vibe-cleaner is a **Skill plus CLI**. Tell Codex or Claude Code what you need in plain language; the Skill inspects and explains, while the CLI performs deterministic scans, verification, execution and recovery. Real cleanup starts only after you see and approve the exact list, method, impact and plan hash.
 
-**Cleanup requires human approval of the specific plan.** v0.2.0 can verify existing archives, remove approved old main transcripts and restore their original paths. Byte restoration does not establish native conversation continuation.
+## Start with three prompts
 
-## Use it from Codex or Claude Code
+### 1. Install it and preferably configure Jev
 
-### 1. Install, then configure Jev
+> Install fireworks-vibe-cleaner from https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner. Check requirements and any existing installation; do not overwrite it or clean files. Then explain how to configure Jev securely. If I skip configuration, start with local rules.
 
-> Install fireworks-vibe-cleaner v0.6.0 from https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner into this tool's personal Skill directory. Do not overwrite an existing installation or clean any files. Then help me configure Jev securely.
+Requires macOS/Linux and Python 3.11+. See the [CLI guide](docs/cli.md) for manual installation. Jev receives fixed metadata to help triage; it does not receive paths, titles, transcripts or code. Disclose data scope and possible charges before a network call, and never paste an API key into chat or command history.
 
-You need macOS/Linux and Python 3.11+. See the [manual installation guide](docs/cli.md#install). Jev uses `TYPESAFE_API_KEY`, injected through a secret manager or process environment; never paste the key into chat, a report or command history. `doctor` checks whether a key is present, not whether authentication or inference succeeds.
+### 2. Review the list and state what must be kept
 
-> Explain Jev's metadata and possible charges before making a network call. If I choose rules-only mode, continue locally without a key.
+> Check how much storage Codex and Claude Code use. Show candidates, recommendations, reasons, alternatives, expected impact and unknowns directly in chat. Leave active, linked, explicitly kept and unclear content alone. Show findings before deleting anything.
 
-**Configure Jev first, then let it help review fresh local evidence.** The cleaner checks selected Codex index protection and relationships, open file handles, and any existing backups you supply. Protected objects stay local and are retained. Jev receives only closed metadata choices, without paths, titles, transcripts or code; a failed call is labeled local review.
+Say “I need to continue these conversations” for important sessions. If file-copy recovery is enough, say which sessions only need a verified archive. Unclear requirements stay unknown. Jev, local rules and assistant purpose judgments provide advice; none can approve cleanup for you.
 
-Say what you need to keep: “I need to continue these conversations” or “A verified file copy is enough for these selected sessions.” If you have not decided, the recovery need remains unknown and removal preparation is unavailable. A found backup and a verified backup are different: the cleaner can check selected bytes within a read budget before suggesting reuse. Your recovery preference never approves deletion.
+### 3. Approve this specific operation
 
-Jev makes a narrow action/reason choice; code does the arithmetic and verification. Eight candidates per batch and up to three concurrent batches keep requests bounded. Metadata cannot establish a conversation's future value. See [evidence, choices and limits](docs/jev.md).
+> Show the exact files, method, backup location, expected reclaim, recovery limits and plan hash, then link the full plan. Wait for my approval and report actual results afterward.
 
-For unclear candidates, ask: “Read only the necessary local snippets and prepare source-bound purpose tags. Tell me which are assistant judgments and which I confirmed. Reuse valid tags; send Jev no excerpts or summaries. Show the next useful step and what still needs checking.” Structured event sampling is bounded to 64 KiB per session. Unknown-purpose files do not receive a new-backup recommendation unless you explicitly chose to preserve history; this avoids adding unexplained copies. You can also request the **offline rules mode**. [Purpose workflow and limits](docs/purpose.md).
+Relevant writers must stop first. If an unchanged plan expires, `archive-refresh` revalidates the same sources and archive bindings and creates a new hash, which still needs approval. For larger cleanup, use `archive-workflow-*`: the CLI removes and restores one canary file and verifies its original path and bytes before it can start the cleanup plan.
 
-### 2. Inspect and ask for recommendations
+## What do backup, archive and cleanup change?
 
-> Use fireworks-vibe-cleaner to inspect Codex and Claude Code storage. Show the main sources of usage and what must be kept. If I have authorized the call, use Jev for fast triage. Show every selected file, recommendation, reason, backup/removal alternatives, expected impact and unknowns directly in chat. Give suggestions first, then fully verify my selected scope. Do not move or delete anything.
-
-Project roots are opt-in. Scans do not cover the whole disk; skipped directories and unreadable files must be disclosed. Unknown activity, protected objects and credentials never acquire deletion authority from model output.
-
-### 3. Approve the exact plan
-
-> Show the exact files, method, bytes, recovery limits and plan hash. Wait for my approval of that plan. If it involves archived conversations, also explain that history may become unavailable and restoring file bytes does not prove I can continue the conversation.
-
-There are two separate cleanup paths:
-
-- **Old logs/caches:** approve quarantine, verify it, then restore or separately approve permanent purge. Same-volume quarantine releases **zero bytes**.
-- **Already-backed-up main transcripts:** `archive-plan` validates existing archives and selected source bytes. Only after exact-plan approval, stopped writers and explicit history-risk acknowledgement does `archive-apply` remove the selected original transcript files while retaining the archives. Related files and harness indexes are unchanged.
-
-A broad cleanup request does not approve unseen files. Stop relevant writers before mutation; `--writers-stopped` records an acknowledgement, not a process-stopping action. Changed scope or source requires a new plan.
-
-## When Codex history becomes too large
-
-> Use fireworks-vibe-cleaner to check my Codex history. If indexed sessions exceed 3 GiB in total, one session exceeds 3 GiB, or the unarchived count exceeds 200, show me a suggested cleanup scope. Keep the newest 100 sessions, everything updated in the last 30 days, pinned sessions, the current thread and my explicit keep list. Give me an overview in chat before linking the full plan. Wait for my approval of the exact scope.
-
-These configurable thresholds trigger **advice only**, never automatic archiving or deletion. `history-audit` reads Codex's canonical index through read-only SQLite access and checks known pin/lineage fields and bounded transcript headers. Counts cover the index, not the exact list currently displayed under UI filters. Byte totals count readable indexed files and are a lower bound when files cannot be checked; incomplete coverage is disclosed.
-
-Before asking for approval, show the triggered thresholds, indexed/unarchived counts, measured bytes and missing coverage, protected counts, proposed roots **and every affected descendant**, intended operation, recovery limits and expected disk reclaim. Then link the complete plan and give its hash. A link alone is not a reviewable overview.
-
-**Native archive changes history visibility; expected disk reclaim is 0 bytes.** The supported Codex 0.154.0 archive API cascades to descendants, so the reviewed scope includes the entire descendant tree. Unarchive affects one thread at a time; recovery must unarchive every affected ID. The tool uses native APIs, without directly writing the index or manually moving transcript files.
-
-Read-only auditing supports macOS/Linux with a recognized schema. Native history writes initially require macOS with OS-enforced network denial; unsupported native versions or unrecognized pin/lineage state refuse mutation. Preserve current/pinned/keep-protected descendants: a root cannot bypass their protection.
-
-To recover actual storage, use the separate verified-ZIP and explicitly approved original-removal workflow. Approval to change history visibility does not authorize deleting transcript originals.
-
-The initial native canary used isolated synthetic root/child/grandchild sessions with the installed Codex binary; transcript content SHA-256 values remained unchanged. It is evidence about API behavior in that test, not archiving of real user history or proof of native conversation continuation.
-
-Incomplete index, file or lineage coverage blocks executable native plans while still allowing pressure reports. Native unarchive updates Codex timestamps and file mtime; recovery verifies paths, content and archive state, not original timestamps.
-
-## Other things you can ask
-
-| What you want | What to tell your AI |
+| Operation | Originals and disk space |
 | --- | --- |
-| Inspect a project | “Inspect `<absolute project path>`; report usage without changing files.” |
-| Preserve important data | “Keep the last 30 days and `<path to keep>`; show remaining candidates.” |
-| Back up conversations | “Back up selected old conversations, verify bytes and retain originals.” |
-| Remove already archived originals | “Prepare an archive-removal plan for these main transcripts. Verify the existing backups, show the exact scope and history risk, and wait for my confirmation.” |
-| Recover archived originals | “Restore the approved archive-removal run to its exact original paths. Do not overwrite existing files or claim conversation continuation.” |
-| Undo quarantine | “Restore the approved log/cache quarantine; report conflicts without overwriting.” |
+| Backup | Create or reuse a copy and retain originals; a new copy consumes space |
+| Codex history archive | Change history-list visibility; expected reclaim is 0 bytes |
+| Log/cache quarantine | Move files to same-volume recovery storage; quarantine itself frees no space, and purge needs separate approval |
+| Remove backed-up transcript originals | Verify archives first, then remove only approved originals; bytes can be restored, but native continuation remains unverified |
 
-`archive-restore` restores exact bytes at original paths; a new inode is expected. It does not rebuild indexes or restore complete harness state. Preserve archives, manifests and the run journal. Backup-only operations retain originals and consume additional storage.
+## Real execution evidence
 
-## Supported scope
+On 2026-09-23, one real operation completed after approval of its exact scope:
+
+| Check | Actual result |
+| --- | --- |
+| Recovery canary | One 2,036,098-byte original was removed, verified, restored and verified again; the original remained at the end |
+| Cleanup | 188 originals totaling 6,280,929,947 logical bytes (about 5.850 GiB) were removed; 188/188 were valid `archive-only` items and 9 archives were retained |
+| Volume observations | The executor window increased by 5,173,981,184 bytes; an external `df` window increased by 5,198,995,456 bytes (about 4.842 GiB). The windows differ and may include unrelated writes and filesystem accounting |
+| Excluded scope | 375 reviewed but unselected objects did not enter the cleanup plan; databases, indexes, related files, source, Skills and credentials were outside the mutation scope |
+| Concurrent Jev check | Two runs over 14 real candidates returned review for all 28 decisions; no accuracy advantage over local rules was shown, and model output did not authorize cleanup |
+| Still unverified | Native conversation continuation and original-path restoration of all 188 removed files; the real restore exercise covered only the one canary |
+
+[Sanitized execution evidence](docs/experiments/real-approved-cleanup-2026-09-23.json). Logical bytes removed, volume movement and recovery coverage are separate measurements; they do not establish that every removed session was restored.
+
+## When Codex history gets large
+
+> Check my Codex history. If total size exceeds 3 GiB, one session exceeds 3 GiB, or the unarchived count exceeds 200, show a recommendation. Keep the newest 100, the last 30 days, pinned/current sessions and my explicit keep list. Give me an overview before the full plan and wait for approval.
+
+Thresholds trigger advice only. Native history archive is expected to reclaim 0 bytes. Actual storage recovery uses the separate “verify ZIP → approve exact plan → restore canary → remove originals” flow. See the [history guide](docs/history.md).
+
+## Supported and protected scope
 
 | Content | Current behavior |
 | --- | --- |
-| Codex `log/codex-tui.log`, `logs/codex-tui.log`; Claude `debug/` logs | Old recognized regular files may use approved quarantine and separate purge |
-| Codex native history | Read-only pressure audit; complete-audit and exact-approved native archive/unarchive; macOS Codex 0.154.0; zero disk reclaim |
-| Python `__pycache__/*.pyc` | Requires existing Git-tracked source; cache ignored and untracked |
-| Recognized old main transcripts | Backup first; separate archive plan, exact approval and history-risk acknowledgement before removal |
-| Subagent, sidechain, fork or unknown-origin transcripts; tool results, checkpoints and assets | No source removal; backup-only where supported |
-| Worktrees, source, memories, credentials, databases, unknown objects | No automatic deletion |
+| Recognized Codex/Claude Code logs | Old files may use approved quarantine and separately approved purge |
+| Codex native history | Read-only pressure audit; archive/recovery after complete audit and exact approval; expected reclaim 0 bytes |
+| Python `__pycache__/*.pyc` | Only untracked cache with corresponding Git-tracked source |
+| Recognized old main transcripts | Verify backup first, then exact-hash approval and canary-gated workflow |
+| Subagent, sidechain, fork, unknown-origin, tool-result, checkpoint and asset files | No source removal; backup-only where supported |
+| Worktrees, source, memories, credentials, databases and unknown objects | No automatic deletion |
 
-See the [CLI guide](docs/cli.md), [compatibility](docs/compatibility.md) and [v0.2.0 evidence record](docs/releases/v0.2.0.md). Keep local reports and recovery data private.
+See the [CLI guide](docs/cli.md), [Jev boundaries](docs/jev.md), [purpose evidence](docs/purpose.md), [compatibility](docs/compatibility.md) and [security policy](SECURITY.md). Keep local inventories, plans, archives and recovery journals private.
 
 ## v0.6.0: useful purpose evidence, with a rules comparison
 
@@ -230,4 +212,4 @@ ruff check .
 mypy vibe_cleaner
 ```
 
-Local tests cover the CLI workflow, native history boundaries and interrupted recovery. CI runs on macOS/Linux with Python 3.11/3.14; check the [actual workflow results](https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner/actions/workflows/ci.yml). See [release notes](docs/releases/v0.6.0.md), [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md). MIT © 2026 Fireworks.
+Local tests cover the CLI workflow, native history boundaries and interrupted recovery. CI runs on macOS/Linux with Python 3.11/3.14; check the [actual workflow results](https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner/actions/workflows/ci.yml). See [release notes](docs/releases/v0.7.0.md), [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md). MIT © 2026 Fireworks.

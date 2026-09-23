@@ -8,15 +8,15 @@
 
 需要 Python 3.11+，支持 macOS、Linux。修改源文件或隔离文件还需要 `lsof`；项目字节码检查需要 Git。无 Python 运行时第三方依赖，不启动常驻服务，默认不联网。
 
-安装 v0.6.0 发布版：
+安装 v0.7.0 发布版：
 
 ```sh
-git clone --branch v0.6.0 --depth 1 https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner.git
+git clone --branch v0.7.0 --depth 1 https://github.com/yizhiyanhua-ai/fireworks-vibe-cleaner.git
 cd fireworks-vibe-cleaner
 python3 scripts/fireworks-vibe-cleaner.py doctor
 ```
 
-直接运行脚本无需安装 Python 包。下文使用简短的 `fireworks-vibe-cleaner` 命令，可选择创建虚拟环境并执行 `python -m pip install .`；也可将该命令替换为 `python3 scripts/fireworks-vibe-cleaner.py`。开发期间使用本地 checkout，跳过标签克隆步骤。实际发布与实测状态见[版本说明](releases/v0.6.0.md)。
+直接运行脚本无需安装 Python 包。下文使用简短的 `fireworks-vibe-cleaner` 命令，可选择创建虚拟环境并执行 `python -m pip install .`；也可将该命令替换为 `python3 scripts/fireworks-vibe-cleaner.py`。开发期间使用本地 checkout，跳过标签克隆步骤。实际发布与实测状态见[版本说明](releases/v0.7.0.md)。
 
 安装 Skill 时先生成目录，再复制到使用的 harness。以下命令拒绝覆盖已有安装：
 
@@ -95,6 +95,25 @@ fireworks-vibe-cleaner archive-verify --state-dir /absolute/path/to/private-stat
 ```
 
 `archive-apply` 重新校验后直接移除所选原件，不把它们移入隔离区，也不删除归档。没有相应用户确认、未停止写入时，不得添加这两个确认参数。关联文件与索引保留不变，历史条目可能无法使用。`archive-restore` 将精确字节恢复到原路径，允许新 inode，不更新索引，也不证明原生续聊成功。保留归档和事务日志；中断后先运行 `archive-verify`，按具体状态处理，不盲目重放删除。删除逻辑字节与卷空闲量实际变化需要分开报告。
+
+### 计划过期与金丝雀门控
+
+计划过期、但希望保持原范围时，用只读刷新重新校验全部源文件、归档文件和成员字节。它拒绝已经执行过的计划以及发生变化的来源；新哈希必须重新展示并确认。
+
+```sh
+fireworks-vibe-cleaner archive-refresh --plan expired-plan.json --ttl-seconds 86400 --output refreshed-plan.json
+```
+
+大批量清理可把一份单文件金丝雀计划和一份互不重叠的正式计划绑定为一个审批对象。`archive-workflow-apply` 固定执行“金丝雀移除 → 校验 → 原路径恢复 → 再校验 → 正式移除 → 校验”。金丝雀未恢复为有效 `source` 状态时，正式计划不会启动；中断后使用 verify 查看子运行，不要重放 apply。
+
+```sh
+fireworks-vibe-cleaner archive-workflow-plan --canary-plan canary.json --cleanup-plan cleanup.json --output workflow.json
+# 在对话里展示两个完整范围、组合哈希与风险，取得该组合哈希的确认。
+fireworks-vibe-cleaner archive-workflow-apply --plan workflow.json --approve WORKFLOW_HASH --writers-stopped --acknowledge-history-risk
+fireworks-vibe-cleaner archive-workflow-verify --state-dir /absolute/path/to/private-state --run WORKFLOW_HASH
+```
+
+大量文件的逐项验证 JSON 可能很长。`archive-verify ... --summary` 返回位置计数、无效项数量、逻辑删除字节和恢复边界；需要定位异常时去掉 `--summary` 查看逐项结果。执行器按文件系统设备去重采样空间，保留负值并记录时间窗；观测值可能包含其他进程写入，不能当成独占释放量。
 
 ## 推荐：Jev 快速筛选，直接在终端看建议
 

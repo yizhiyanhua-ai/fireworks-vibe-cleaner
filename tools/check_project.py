@@ -23,13 +23,18 @@ for path in (ROOT / "schemas").glob("*.json"):
 assert "name: fireworks-vibe-cleaner" in (ROOT / "SKILL.md").read_text()
 for path in (ROOT / "docs/experiments").glob("*.json"):
     report = json.loads(path.read_text())
-    assert report["real_user_data_modified"] is False
-    if report["data"] not in {"real-live-jev", "real-jev-triage", "real-jev-evidence", "real-purpose-comparison"}:
+    data = report["data"]
+    if data == "real-approved-cleanup":
+        assert report["real_user_data_modified"] is True
+    else:
+        assert report["real_user_data_modified"] is False
+    if data not in {"real-live-jev", "real-jev-triage", "real-jev-evidence", "real-purpose-comparison",
+                    "real-approved-cleanup"}:
         assert report["network_calls"] == 0
-    if report["data"] == "synthetic-only":
+    if data == "synthetic-only":
         assert report["passed"] and len(report["experiments"]) == 7
         assert all(row["passed"] for row in report["experiments"])
-    elif report["data"] == "real-local":
+    elif data == "real-local":
         assert report["cleanup_bytes_reclaimed"] == 0
         assert report["inventory_after_fix_same_snapshot"]["eligible_files"] == 0
         assert len(report["backups"]) == 2
@@ -38,7 +43,7 @@ for path in (ROOT / "docs/experiments").glob("*.json"):
             assert row["source_hashes_unchanged"] and row["extracted_hashes_match"]
             assert row["source_bytes_deleted"] == row["cleanup_bytes_reclaimed"] == 0
             assert row["source_bytes_before"] == row["source_bytes_after"]
-    elif report["data"] == "real-local-large":
+    elif data == "real-local-large":
         assert report["source_bytes"] >= 10 * 1024**3
         assert report["final_all_source_hashes_unchanged"]
         assert report["source_bytes_deleted"] == report["cleanup_bytes_reclaimed"] == 0
@@ -46,14 +51,14 @@ for path in (ROOT / "docs/experiments").glob("*.json"):
         for row in report["rows"]:
             assert row["source_bytes"] == row["full_stream_restored_bytes"]
             assert row["all_restore_hashes_match"] and row["strict_jsonl_valid"]
-    elif report["data"] == "real-live-jev":
+    elif data == "real-live-jev":
         assert report["transport_mocked"] is False
         assert report["network_calls"] == report["successful_calls"] == len(report["runs"])
         assert report["deletion_actions"] == 0
         for run in report["runs"]:
             assert run["status"] == "ok"
             assert all(a["choice"] in {"keep", "review", "backup"} for a in run["answers"].values())
-    elif report["data"] == "real-jev-triage":
+    elif data == "real-jev-triage":
         assert report["transport_mocked"] is False and report["source_hashes_unchanged"]
         assert report["source_mutations_executed"] is False and report["actual_reclaimed_bytes"] == 0
         assert report["no_accuracy_claim"] and report["no_cleanup_authorization"]
@@ -63,7 +68,7 @@ for path in (ROOT / "docs/experiments").glob("*.json"):
             assert sum(run["action_counts"].values()) == report["source_files"]
             assert all(d["action"] in {"keep", "review", "backup", "prepare_removal", "prepare_cache_cleanup"}
                        for d in run["decisions"])
-    elif report["data"] == "real-jev-evidence":
+    elif data == "real-jev-evidence":
         assert not report["transport_mocked"] and not report["source_mutations_executed"]
         assert report["actual_reclaimed_bytes"] == 0 and report["no_accuracy_claim"]
         assert report["all_hash_checked_sources_unchanged"]
@@ -77,7 +82,7 @@ for path in (ROOT / "docs/experiments").glob("*.json"):
         for run in report["runs"][1:]:
             assert "prepare_removal" not in run["action_counts"]
             assert all(not d["facts"]["protected"] or d["source"] == "local-protection" for d in run["decisions"])
-    elif report["data"] == "real-purpose-comparison":
+    elif data == "real-purpose-comparison":
         assert not report["transport_mocked"] and not report["source_mutations_executed"]
         assert report["actual_reclaimed_bytes"] == 0 and report["no_cleanup_authorization"]
         assert report["all_hash_checked_sources_unchanged"] and report["no_accuracy_claim"]
@@ -91,7 +96,7 @@ for path in (ROOT / "docs/experiments").glob("*.json"):
             assert sum(run["actions"].values()) == report["source_files"]
             assert "prepare_removal" not in run["actions"]
             assert all(d["action"] != "backup" or d["facts"]["purpose_role"] != "unknown" for d in run["decisions"])
-    elif report["data"] == "real-session-preflight":
+    elif data == "real-session-preflight":
         assert report["source_mutations_authorized"] is False
         assert report["source_mutations_executed"] is False
         assert report["real_source_files_deleted"] == report["verified_reclaimed_bytes"] == 0
@@ -105,7 +110,7 @@ for path in (ROOT / "docs/experiments").glob("*.json"):
         assert len(report["actual_cli_refusal_checks"]) == 3
         assert all(row["exit_code"] == 2 and not row["run_created"]
                    for row in report["actual_cli_refusal_checks"])
-    elif report["data"] == "real-codex-history-audit":
+    elif data == "real-codex-history-audit":
         assert report["real_threads_archived"] == report["verified_reclaimed_bytes"] == 0
         metrics = report["metrics"]
         assert metrics["indexed_threads"] == metrics["archived_threads"] + metrics["unarchived_threads"]
@@ -114,7 +119,7 @@ for path in (ROOT / "docs/experiments").glob("*.json"):
         assert report["native_plan_refusal"] == {
             "exit_code": 2, "reason": "incomplete-index-file-lineage-coverage",
             "plan_created": False, "run_created": False}
-    elif report["data"] == "synthetic-native-archive":
+    elif data == "synthetic-native-archive":
         assert report["transport_mocked"] is False and report["network_denied"]
         assert report["other_executables_denied"] and report["writes_limited_to_fixture_and_runtime_home"]
         assert report["synthetic_threads"] == 4
@@ -125,7 +130,7 @@ for path in (ROOT / "docs/experiments").glob("*.json"):
         assert report["verified_reclaimed_bytes"] == 0 and not report["harness_resume_verified"]
         assert len(report["refused_cases"]) == 4
         assert all(r["exit_code"] == 2 for r in report["refused_cases"])
-    elif report["data"] == "real-native-history":
+    elif data == "real-native-history":
         # A failed native recovery check is a finding, never rewritten as success.
         assert report["continuation_verified"] is False
         codex_ok = all(row["ok"] for row in report["codex"]["samples"])
@@ -133,6 +138,16 @@ for path in (ROOT / "docs/experiments").glob("*.json"):
         assert report["all_native_checks_passed"] == (codex_ok and claude_ok)
         assert report["codex"]["nonempty_history_read_verified"] == codex_ok
         assert report["claude"]["exact_file_read_verified"] == claude_ok
+    elif data == "real-approved-cleanup":
+        assert report["source_mutations_authorized"]
+        assert report["cleanup"]["originals_removed"] == report["cleanup"]["valid_archive_only_items"]
+        assert report["cleanup"]["invalid_items"] == 0 and report["cleanup"]["archives_verified"]
+        assert report["canary"]["restored_byte_verification"] == "passed"
+        assert report["canary"]["retained_at_end"]
+        assert report["jev_acceptance"]["paths_or_content_sent"] is False
+        assert report["network_calls"] == (report["jev_acceptance"]["real_calls"]
+                                           + report["jev_acceptance"]["synthetic_calls"])
+        assert report["not_verified"]
     else:
         raise AssertionError("Unknown public evidence type")
     forbidden_keys = {"path", "root", "relative", "username", "hostname", "session_id", "api_key", "token"}
